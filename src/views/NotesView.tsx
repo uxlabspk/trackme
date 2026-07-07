@@ -3,10 +3,10 @@ import { MilkdownProvider } from "@milkdown/react";
 import FileTreeList from "../components/FileTreeList";
 import MarkdownEditor from "../components/MarkdownEditor";
 import Dialog from "../components/Dialog";
-import { deleteFile, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
+import { createFolder, deleteFile, deleteFolder, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
-import { Trash2 } from "lucide-react";
+import { FolderPlus, Trash2 } from "lucide-react";
 import "../styles/milkdown.css";
 
 interface Props {
@@ -23,6 +23,24 @@ function slugify(title: string): string {
   );
 }
 
+function sanitizeFolderName(name: string): string {
+  return (
+    name
+      .trim()
+      .replace(/[\\/]+/g, "-")
+      .replace(/\.+/g, "")
+      .replace(/^\.+/, "")
+      .replace(/[^\p{L}\p{N} _-]+/gu, "")
+      .replace(/^-+|-+$/g, "")
+      .trim() || "untitled"
+  );
+}
+
+function parentRelPath(relPath: string): string {
+  const idx = relPath.lastIndexOf("/");
+  return idx <= 0 ? "notes" : relPath.slice(0, idx);
+}
+
 export default function NotesView({ vaultPath }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -30,6 +48,9 @@ export default function NotesView({ vaultPath }: Props) {
   const [dirty, setDirty] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [folderOpen, setFolderOpen] = useState(false);
+  const [folderName, setFolderName] = useState("");
+  const [currentFolder, setCurrentFolder] = useState("notes");
   const saveTimer = useRef<number | null>(null);
 
   const refreshTree = useCallback(async () => {
@@ -52,6 +73,7 @@ export default function NotesView({ vaultPath }: Props) {
       const { frontmatter, body } = parseFrontmatter<NoteFrontmatter>(raw);
       setNote({ relPath: selected, frontmatter, body });
       setDirty(false);
+      setCurrentFolder(parentRelPath(selected));
     });
     return () => {
       cancelled = true;
@@ -74,8 +96,8 @@ export default function NotesView({ vaultPath }: Props) {
     [vaultPath],
   );
 
-  async function createNote(title: string) {
-    const relPath = `notes/${slugify(title)}.md`;
+  async function createNote(title: string, folder: string) {
+    const relPath = `${folder.replace(/\/+$/, "")}/${slugify(title)}.md`;
     const now = new Date().toISOString();
     const raw = serializeFrontmatter(
       { title, createdAt: now, updatedAt: now, tags: [] },
@@ -95,7 +117,39 @@ export default function NotesView({ vaultPath }: Props) {
     const title = newTitle.trim();
     if (!title) return;
     setNewOpen(false);
-    await createNote(title);
+    await createNote(title, currentFolder);
+  }
+
+  function openFolderDialog() {
+    setFolderName("");
+    setFolderOpen(true);
+  }
+
+  async function submitNewFolder() {
+    const name = sanitizeFolderName(folderName);
+    if (!name) return;
+    const relPath = `${currentFolder.replace(/\/+$/, "")}/${name}`;
+    setFolderOpen(false);
+    await createFolder(joinPath(vaultPath, relPath));
+    await refreshTree();
+    setCurrentFolder(relPath);
+  }
+
+  async function handleDeleteFolder(relPath: string) {
+    if (
+      !window.confirm(
+        `Delete folder "${relPath}" and all its notes? This can't be undone.`,
+      )
+    )
+      return;
+    await deleteFolder(joinPath(vaultPath, relPath));
+    if (currentFolder === relPath || currentFolder.startsWith(`${relPath}/`)) {
+      setCurrentFolder("notes");
+    }
+    if (selected && (selected === relPath || selected.startsWith(`${relPath}/`))) {
+      setSelected(null);
+    }
+    await refreshTree();
   }
 
   async function handleDelete() {
@@ -129,28 +183,51 @@ export default function NotesView({ vaultPath }: Props) {
           <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
             NOTES
           </h2>
-          <button
-            onClick={openNewDialog}
-            title="New note"
-            style={{
-              border: "1px solid var(--hairline-strong)",
-              background: "#fff",
-              borderRadius: "var(--radius-sm)",
-              width: 24,
-              height: 24,
-              cursor: "pointer",
-              fontSize: 15,
-              lineHeight: 1,
-              color: "var(--moss-deep)",
-            }}
-          >
-            +
-          </button>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={openFolderDialog}
+              title="New folder"
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "#fff",
+                borderRadius: "var(--radius-sm)",
+                width: 24,
+                height: 24,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--moss-deep)",
+              }}
+            >
+              <FolderPlus size={14} />
+            </button>
+            <button
+              onClick={openNewDialog}
+              title="New note"
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "#fff",
+                borderRadius: "var(--radius-sm)",
+                width: 24,
+                height: 24,
+                cursor: "pointer",
+                fontSize: 15,
+                lineHeight: 1,
+                color: "var(--moss-deep)",
+              }}
+            >
+              +
+            </button>
+          </div>
         </div>
         <FileTreeList
           entries={tree}
           selectedRelPath={selected}
           onSelect={setSelected}
+          selectedFolderRelPath={currentFolder}
+          onSelectFolder={setCurrentFolder}
+          onDeleteFolder={handleDeleteFolder}
           emptyLabel="No notes yet — click + to add one"
         />
       </aside>
@@ -306,6 +383,86 @@ export default function NotesView({ vaultPath }: Props) {
             boxSizing: "border-box",
           }}
         />
+        <div
+          style={{
+            marginTop: 8,
+            fontFamily: "var(--font-mono)",
+            fontSize: 11.5,
+            color: "var(--ink-soft)",
+          }}
+        >
+          in /{currentFolder}
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={folderOpen}
+        title="New folder"
+        onClose={() => setFolderOpen(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setFolderOpen(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitNewFolder}
+              disabled={!folderName.trim()}
+              style={{
+                border: "none",
+                background: "var(--moss)",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: folderName.trim() ? "pointer" : "not-allowed",
+                opacity: folderName.trim() ? 1 : 0.5,
+              }}
+            >
+              Create
+            </button>
+          </>
+        }
+      >
+        <input
+          autoFocus
+          value={folderName}
+          onChange={(e) => setFolderName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submitNewFolder();
+          }}
+          placeholder="Folder name"
+          style={{
+            width: "100%",
+            fontFamily: "var(--font-display)",
+            fontSize: 15,
+            padding: "9px 11px",
+            border: "1px solid var(--hairline-strong)",
+            borderRadius: "var(--radius-sm)",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+        <div
+          style={{
+            marginTop: 8,
+            fontFamily: "var(--font-mono)",
+            fontSize: 11.5,
+            color: "var(--ink-soft)",
+          }}
+        >
+          in /{currentFolder}
+        </div>
       </Dialog>
     </div>
   );

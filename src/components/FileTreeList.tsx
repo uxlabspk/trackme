@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import type { VaultEntry } from "../lib/types";
 
 interface Props {
@@ -6,6 +7,9 @@ interface Props {
   onSelect: (relPath: string) => void;
   emptyLabel?: string;
   depth?: number;
+  selectedFolderRelPath?: string | null;
+  onSelectFolder?: (relPath: string) => void;
+  onDeleteFolder?: (relPath: string) => void;
 }
 
 export default function FileTreeList({
@@ -14,6 +18,9 @@ export default function FileTreeList({
   onSelect,
   emptyLabel = "No files yet",
   depth = 0,
+  selectedFolderRelPath = null,
+  onSelectFolder,
+  onDeleteFolder,
 }: Props) {
   if (entries.length === 0 && depth === 0) {
     return (
@@ -38,20 +45,64 @@ export default function FileTreeList({
             <>
               <div
                 style={{
-                  fontSize: 11.5,
-                  fontFamily: "var(--font-mono)",
-                  color: "var(--ink-soft)",
-                  padding: `8px 14px 4px ${14 + depth * 12}px`,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  display: "flex",
+                  alignItems: "center",
+                  paddingLeft: `${14 + depth * 12}px`,
+                  borderLeft:
+                    selectedFolderRelPath === entry.rel_path
+                      ? "2px solid var(--moss)"
+                      : "2px solid transparent",
+                  background:
+                    selectedFolderRelPath === entry.rel_path
+                      ? "var(--paper-raised)"
+                      : "transparent",
                 }}
               >
-                {entry.name}/
+                <button
+                  onClick={() => onSelectFolder?.(entry.rel_path)}
+                  style={{
+                    flex: 1,
+                    textAlign: "left",
+                    fontSize: 11.5,
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--ink-soft)",
+                    padding: "8px 6px 4px 0",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    border: "none",
+                    background: "transparent",
+                    cursor: onSelectFolder ? "pointer" : "default",
+                    fontWeight: selectedFolderRelPath === entry.rel_path ? 700 : 400,
+                  }}
+                  title={entry.rel_path}
+                >
+                  {entry.name}/
+                </button>
+                {onDeleteFolder && (
+                  <button
+                    onClick={() => onDeleteFolder(entry.rel_path)}
+                    title="Delete folder"
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: "var(--ink-soft)",
+                      cursor: "pointer",
+                      padding: "4px 8px 4px 4px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
               </div>
               <FileTreeList
                 entries={entry.children}
                 selectedRelPath={selectedRelPath}
                 onSelect={onSelect}
+                selectedFolderRelPath={selectedFolderRelPath}
+                onSelectFolder={onSelectFolder}
+                onDeleteFolder={onDeleteFolder}
                 depth={depth + 1}
               />
             </>

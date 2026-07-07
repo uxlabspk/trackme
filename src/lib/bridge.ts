@@ -32,6 +32,14 @@ export async function deleteFile(path: string): Promise<void> {
   await invoke("delete_file", { path });
 }
 
+export async function createFolder(path: string): Promise<void> {
+  await invoke("create_folder", { path });
+}
+
+export async function deleteFolder(path: string): Promise<void> {
+  await invoke("delete_folder", { path });
+}
+
 export async function renameFile(from: string, to: string): Promise<void> {
   await invoke("rename_file", { from, to });
 }

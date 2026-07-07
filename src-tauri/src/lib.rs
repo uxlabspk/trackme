@@ -45,6 +45,22 @@ fn delete_file(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn create_folder(path: String) -> Result<(), String> {
+    if path.contains("..") {
+        return Err("invalid folder path".into());
+    }
+    fs::create_dir_all(&path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_folder(path: String) -> Result<(), String> {
+    if path.contains("..") {
+        return Err("invalid folder path".into());
+    }
+    fs::remove_dir_all(&path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn rename_file(from: String, to: String) -> Result<(), String> {
     if let Some(parent) = Path::new(&to).parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -80,6 +96,8 @@ pub fn run() {
             read_file,
             write_file,
             delete_file,
+            create_folder,
+            delete_folder,
             rename_file,
             compute_meeting_occurrences,
         ])
