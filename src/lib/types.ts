@@ -33,6 +33,7 @@ export interface MeetingFrontmatter {
   title?: string;
   time?: string;
   duration_minutes?: number;
+  link?: string;
   recurrence?: Recurrence;
   [key: string]: unknown;
 }

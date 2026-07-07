@@ -308,7 +308,57 @@ export default function MeetingsView({ vaultPath }: Props) {
                     }}
                   />
                 </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <label
+                    style={{
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      color: "var(--ink-soft)",
+                      display: "block",
+                      marginBottom: 6,
+                    }}
+                  >
+                    MEETING LINK
+                  </label>
+                  <input
+                    type="url"
+                    value={meeting.frontmatter.link ?? ""}
+                    onChange={(e) => updateField("link", e.target.value)}
+                    placeholder="https://meet.google.com/…"
+                    style={{
+                      width: "100%",
+                      padding: "8px 10px",
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--hairline-strong)",
+                      fontSize: 14,
+                      fontFamily: "var(--font-mono)",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
               </div>
+
+              {meeting.frontmatter.link?.trim() && (
+                <button
+                  onClick={() => window.open(meeting.frontmatter.link!.trim(), "_blank")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    border: "none",
+                    background: "var(--clay)",
+                    color: "#fff",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "9px 16px",
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    marginBottom: 24,
+                  }}
+                >
+                  Launch meeting
+                </button>
+              )}
 
               <div
                 style={{

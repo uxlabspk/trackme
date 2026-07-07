@@ -10,6 +10,7 @@ import {
 import { parseFrontmatter } from "../lib/frontmatter";
 import { parseTodoFile, serializeTodoFile, toggleTodoItem } from "../lib/todos";
 import type { MeetingFrontmatter, TodoFile, VaultEntry } from "../lib/types";
+import { Copy, CopyCheck, CopyIcon } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -20,6 +21,7 @@ interface TodayMeeting {
   title: string;
   time?: string;
   durationMinutes?: number;
+  link?: string;
   relPath: string;
 }
 
@@ -52,6 +54,7 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
           title: frontmatter.title ?? entry.name,
           time: frontmatter.time,
           durationMinutes: frontmatter.duration_minutes,
+          link: frontmatter.link,
           relPath: entry.rel_path,
         });
       }
@@ -95,15 +98,15 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
 
   const todos: OpenTodo[] | null = todoFiles
     ? Object.values(todoFiles).flatMap((file) =>
-        file.items
-          .filter((item) => !item.checked)
-          .map((item) => ({
-            listName: file.frontmatter.name ?? file.relPath,
-            text: item.text,
-            relPath: file.relPath,
-            itemId: item.id,
-          })),
-      )
+      file.items
+        .filter((item) => !item.checked)
+        .map((item) => ({
+          listName: file.frontmatter.name ?? file.relPath,
+          text: item.text,
+          relPath: file.relPath,
+          itemId: item.id,
+        })),
+    )
     : null;
 
   return (
@@ -190,10 +193,44 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
                     {m.time ?? "—"}
                   </span>
                   <span style={{ fontSize: 14.5, fontWeight: 500 }}>{m.title}</span>
-                  {m.durationMinutes && (
+
+                  <div style={{ flex: 1 }} />
+
+                  {/* {m.durationMinutes && (
                     <span style={{ marginLeft: "auto", fontSize: 12.5, color: "var(--clay-deep)" }}>
                       {m.durationMinutes} min
                     </span>
+                  )} */}
+                  {m.link?.trim() && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(m.link!.trim());
+                          // Optional: Show a toast or feedback that the link was copied
+                          console.log("Link copied to clipboard!");
+                        } catch (err) {
+                          console.error("Failed to copy link:", err);
+                        }
+                      }}
+                      style={{
+                        marginLeft: m.durationMinutes ? 12 : "auto",
+                        border: "none",
+                        background: "var(--clay)",
+                        color: "#fff",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "6px 12px",
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6
+                      }}
+                    >
+                      <CopyIcon size={14} />
+                      Copy Link
+                    </button>
                   )}
                 </div>
               ))}
