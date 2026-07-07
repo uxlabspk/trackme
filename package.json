@@ -19,6 +19,8 @@
     "@milkdown/kit": "^7.21.2",
     "@milkdown/react": "^7.21.1",
     "@milkdown/plugin-prism": "^7.20.0",
+    "@milkdown/plugin-emoji": "^7.21.2",
+    "@milkdown/plugin-upload": "^7.21.2",
     "prismjs": "^1.29.0",
     "gray-matter": "^4.0.3",
     "date-fns": "^4.1.0"

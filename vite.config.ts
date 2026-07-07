@@ -23,8 +23,8 @@ export default defineConfig(async () => ({
     // `require.resolve(pathToLanguage)` call to lazy-load grammars, which
     // doesn't exist in the browser/webview. This plugin rewrites Prism's
     // language imports at build time instead, so the runtime `require`
-    // path is never hit. Keep this list in sync with the prismjs/components
-    // imports in src/components/MarkdownEditor.tsx.
+    // path is never hit. Add languages here to enable highlighting for
+    // more fenced-code blocks.
     prismjs({
       languages: [
         "markup",
@@ -36,9 +36,34 @@ export default defineConfig(async () => ({
         "tsx",
         "python",
         "rust",
+        "go",
+        "java",
+        "c",
+        "cpp",
+        "csharp",
+        "kotlin",
+        "swift",
+        "ruby",
+        "php",
+        "scala",
+        "dart",
+        "elixir",
+        "r",
+        "lua",
+        "sql",
         "bash",
+        "powershell",
+        "docker",
+        "graphql",
         "json",
         "yaml",
+        "toml",
+        "ini",
+        "diff",
+        "http",
+        "nginx",
+        "makefile",
+        "latex",
         "markdown",
       ],
       theme: "okaidia",

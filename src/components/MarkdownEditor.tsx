@@ -4,6 +4,9 @@ import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { prism } from "@milkdown/plugin-prism";
 import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
+import { history } from "@milkdown/kit/plugin/history";
+import { upload } from "@milkdown/kit/plugin/upload";
+import { remarkEmojiPlugin } from "@milkdown/plugin-emoji";
 import { Milkdown, useEditor } from "@milkdown/react";
 
 // Prism languages + theme are bundled by vite-plugin-prismjs (see
@@ -31,8 +34,11 @@ export default function MarkdownEditor({ value, onChange }: Props) {
       })
       .use(commonmark)
       .use(gfm)
+      .use(prism)
+      .use(history)
       .use(listener)
-      .use(prism);
+      .use(upload)
+      .use(remarkEmojiPlugin);
   }, []);
 
   return (
