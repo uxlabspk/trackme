@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import {
   computeMeetingOccurrences,
   joinPath,
   listVaultFolder,
   readFile,
+  writeFile,
 } from "../lib/bridge";
 import { parseFrontmatter } from "../lib/frontmatter";
-import { parseTodoFile } from "../lib/todos";
-import type { MeetingFrontmatter, VaultEntry } from "../lib/types";
+import { parseTodoFile, serializeTodoFile, toggleTodoItem } from "../lib/todos";
+import type { MeetingFrontmatter, TodoFile, VaultEntry } from "../lib/types";
 
 interface Props {
   vaultPath: string;
@@ -26,6 +27,7 @@ interface OpenTodo {
   listName: string;
   text: string;
   relPath: string;
+  itemId: string;
 }
 
 function flatten(entries: VaultEntry[]): VaultEntry[] {
@@ -34,58 +36,75 @@ function flatten(entries: VaultEntry[]): VaultEntry[] {
 
 export default function AgendaView({ vaultPath, onNavigate }: Props) {
   const [meetings, setMeetings] = useState<TodayMeeting[] | null>(null);
-  const [todos, setTodos] = useState<OpenTodo[] | null>(null);
+  const [todoFiles, setTodoFiles] = useState<Record<string, TodoFile> | null>(null);
   const today = format(new Date(), "yyyy-MM-dd");
+
+  const loadMeetings = useCallback(async () => {
+    const entries = flatten(await listVaultFolder(vaultPath, "meetings"));
+    const results: TodayMeeting[] = [];
+    for (const entry of entries) {
+      const raw = await readFile(joinPath(vaultPath, entry.rel_path));
+      const { frontmatter } = parseFrontmatter<MeetingFrontmatter>(raw);
+      if (!frontmatter.recurrence) continue;
+      const occ = await computeMeetingOccurrences(frontmatter.recurrence, today, today);
+      if (occ.length > 0) {
+        results.push({
+          title: frontmatter.title ?? entry.name,
+          time: frontmatter.time,
+          durationMinutes: frontmatter.duration_minutes,
+          relPath: entry.rel_path,
+        });
+      }
+    }
+    results.sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
+    return results;
+  }, [vaultPath, today]);
+
+  const loadTodoFiles = useCallback(async () => {
+    const entries = flatten(await listVaultFolder(vaultPath, "todos"));
+    const files: Record<string, TodoFile> = {};
+    for (const entry of entries) {
+      const raw = await readFile(joinPath(vaultPath, entry.rel_path));
+      files[entry.rel_path] = parseTodoFile(entry.rel_path, raw);
+    }
+    return files;
+  }, [vaultPath]);
 
   useEffect(() => {
     let cancelled = false;
-
-    async function loadMeetings() {
-      const entries = flatten(await listVaultFolder(vaultPath, "meetings"));
-      const results: TodayMeeting[] = [];
-      for (const entry of entries) {
-        const raw = await readFile(joinPath(vaultPath, entry.rel_path));
-        const { frontmatter } = parseFrontmatter<MeetingFrontmatter>(raw);
-        if (!frontmatter.recurrence) continue;
-        const occ = await computeMeetingOccurrences(frontmatter.recurrence, today, today);
-        if (occ.length > 0) {
-          results.push({
-            title: frontmatter.title ?? entry.name,
-            time: frontmatter.time,
-            durationMinutes: frontmatter.duration_minutes,
-            relPath: entry.rel_path,
-          });
-        }
-      }
-      results.sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
+    loadMeetings().then((results) => {
       if (!cancelled) setMeetings(results);
-    }
-
-    async function loadTodos() {
-      const entries = flatten(await listVaultFolder(vaultPath, "todos"));
-      const results: OpenTodo[] = [];
-      for (const entry of entries) {
-        const raw = await readFile(joinPath(vaultPath, entry.rel_path));
-        const parsed = parseTodoFile(entry.rel_path, raw);
-        for (const item of parsed.items) {
-          if (!item.checked) {
-            results.push({
-              listName: parsed.frontmatter.name ?? entry.name,
-              text: item.text,
-              relPath: entry.rel_path,
-            });
-          }
-        }
-      }
-      if (!cancelled) setTodos(results);
-    }
-
-    loadMeetings();
-    loadTodos();
+    });
+    loadTodoFiles().then((files) => {
+      if (!cancelled) setTodoFiles(files);
+    });
     return () => {
       cancelled = true;
     };
-  }, [vaultPath, today]);
+  }, [loadMeetings, loadTodoFiles]);
+
+  async function handleToggleTodo(relPath: string, itemId: string) {
+    if (!todoFiles) return;
+    const current = todoFiles[relPath];
+    if (!current) return;
+    const next = toggleTodoItem(current, itemId);
+    // Update UI immediately, then persist to disk.
+    setTodoFiles({ ...todoFiles, [relPath]: next });
+    await writeFile(joinPath(vaultPath, relPath), serializeTodoFile(next));
+  }
+
+  const todos: OpenTodo[] | null = todoFiles
+    ? Object.values(todoFiles).flatMap((file) =>
+        file.items
+          .filter((item) => !item.checked)
+          .map((item) => ({
+            listName: file.frontmatter.name ?? file.relPath,
+            text: item.text,
+            relPath: file.relPath,
+            itemId: item.id,
+          })),
+      )
+    : null;
 
   return (
     <div style={{ height: "100%", overflowY: "auto", padding: "36px 40px" }}>
@@ -220,7 +239,7 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {todos.slice(0, 12).map((t, i) => (
                 <div
-                  key={`${t.relPath}-${i}`}
+                  key={`${t.relPath}-${t.itemId}-${i}`}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -230,13 +249,18 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
                     background: "var(--slate-soft)",
                   }}
                 >
-                  <span
+                  <button
+                    onClick={() => handleToggleTodo(t.relPath, t.itemId)}
+                    aria-label="Mark complete"
                     style={{
                       width: 16,
                       height: 16,
                       borderRadius: 4,
                       border: "1.5px solid var(--slate)",
+                      background: "none",
                       flexShrink: 0,
+                      padding: 0,
+                      cursor: "pointer",
                     }}
                   />
                   <span style={{ fontSize: 14 }}>{t.text}</span>
