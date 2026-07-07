@@ -225,67 +225,97 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
                   >
                     {m.completed ? "✓" : ""}
                   </button>
-                  <span
+
+                  <div
                     style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: m.completed ? "var(--ink-soft)" : "var(--clay-deep)",
-                      minWidth: 56,
-                      textDecoration: m.completed ? "line-through" : "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "start",
+                      gap: 8
                     }}
                   >
-                    {m.time ?? "—"}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 14.5,
-                      fontWeight: 500,
-                      textDecoration: m.completed ? "line-through" : "none",
-                      color: m.completed ? "var(--ink-soft)" : "inherit",
-                    }}
-                  >
-                    {m.title}
-                  </span>
 
-                  <div style={{ flex: 1 }} />
-
-                  {/* {m.durationMinutes && (
-                    <span style={{ marginLeft: "auto", fontSize: 12.5, color: "var(--clay-deep)" }}>
-                      {m.durationMinutes} min
-                    </span>
-                  )} */}
-                  {m.link?.trim() && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(m.link!.trim());
-                          // Optional: Show a toast or feedback that the link was copied
-                          console.log("Link copied to clipboard!");
-                        } catch (err) {
-                          console.error("Failed to copy link:", err);
-                        }
-                      }}
+                    <span
                       style={{
-                        marginLeft: m.durationMinutes ? 12 : "auto",
-                        border: "none",
-                        background: "var(--clay)",
-                        color: "#fff",
-                        borderRadius: "var(--radius-sm)",
-                        padding: "6px 12px",
-                        fontSize: 12.5,
+                        fontSize: 16,
                         fontWeight: 600,
-                        cursor: "pointer",
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6
+                        textDecoration: m.completed ? "line-through" : "none",
+                        color: m.completed ? "var(--ink-soft)" : "inherit",
                       }}
                     >
-                      <CopyIcon size={14} />
-                      Copy Link
-                    </button>
-                  )}
+                      {m.title}
+                    </span>
+
+                    <span
+                      style={{
+                        fontSize: 14.5,
+                        fontWeight: 500,
+                        textDecoration: m.completed ? "line-through" : "none",
+                        color: m.completed ? "var(--ink-soft)" : "inherit",
+                      }}
+                    >
+                      {m.durationMinutes} Minutes
+                    </span>
+
+                  </div>
+                  <div style={{ flex: 1 }} />
+
+
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'end',
+                      gap: 15
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 16,
+                        fontWeight: 600,
+                        color: m.completed ? "var(--ink-soft)" : "var(--clay-deep)",
+                        textDecoration: m.completed ? "line-through" : "none",
+                      }}
+                    >
+                      {m.time ?? "—"}
+                    </span>
+
+                    {m.link?.trim() && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(m.link!.trim());
+                            // Optional: Show a toast or feedback that the link was copied
+                            console.log("Link copied to clipboard!");
+                          } catch (err) {
+                            console.error("Failed to copy link:", err);
+                          }
+                        }}
+                        style={{
+                          marginLeft: m.durationMinutes ? 12 : "auto",
+                          border: "none",
+                          background: "var(--clay)",
+                          color: "#fff",
+                          borderRadius: "var(--radius-sm)",
+                          padding: "6px 12px",
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6
+                        }}
+                      >
+                        <CopyIcon size={14} />
+                        Copy Link
+                      </button>
+                    )}
+
+                  </div>
+
                 </div>
               ))}
             </div>
