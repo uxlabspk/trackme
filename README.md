@@ -4,14 +4,10 @@ A personal, local-first productivity desktop app. Notes, recurring meetings,
 and todos — all stored as plain markdown files in a folder you choose (the
 **vault**), so nothing is ever locked away.
 
-Built with **Tauri** (Rust shell) + **React** (frontend, built/served with
+Built with **Tauri** (Rust shell) + **React** (frontend, built and served with
 **Deno** instead of Node).
 
 ## Prerequisites
-
-You'll need these installed locally (this was built in a sandbox with no
-Rust toolchain, so it hasn't been compiled — but every file is complete,
-real source):
 
 1. **Rust** — https://www.rust-lang.org/tools/install
    ```
@@ -31,11 +27,8 @@ real source):
 ```bash
 cd trackme
 
-# Install JS deps (Deno reads package.json/deno.json and manages this)
-deno install
-
-# Launch the app in dev mode (hot-reloads the frontend, opens a native window)
-deno task tauri dev
+deno task dev       # launches frontend on :1420
+deno task tauri dev # hot-reloads the frontend and opens a native window
 ```
 
 First launch shows the **Welcome** screen → **Get Started** → pick or create
@@ -64,15 +57,16 @@ trackme/
                            # frontmatter.ts, todos.ts, appConfig.ts
   src-tauri/              # Rust backend
     src/
+      main.rs             # entry point
       lib.rs              # Tauri commands (read/write/delete/rename files,
                            # bootstrap vault, compute recurrence)
       vault.rs            # vault bootstrap + file-tree listing
-      recurrence.rs        # RRULE-like recurrence engine (+ unit tests)
+      recurrence.rs       # RRULE-like recurrence engine (+ unit tests)
     capabilities/main.json # Tauri v2 permission grants
     tauri.conf.json
 ```
 
-## What's implemented (v1 scope from the design doc)
+## What's implemented
 
 - [x] Welcome screen
 - [x] Vault picker + folder bootstrap (`notes/`, `meetings/`, `todos/`, `.trackme/`)
@@ -88,14 +82,14 @@ trackme/
 - [x] Agenda / Today view: today's meeting occurrences + all open todos
       across every list
 
-## Notes on implementation choices
+## Implementation notes
 
 - **Recurrence engine** (`src-tauri/src/recurrence.rs`) is hand-written
-  Rust, not a wrapper around a full iCal library, per the design doc's v1
-  scope decision. It supports `once`, `daily`, `weekly` (with a day-of-week
-  set and an N-week interval), and `monthly` (same day-of-month, clamped to
-  the last day when the month is short, e.g. Jan 31 → Feb 28). Two unit
-  tests are included; run them with `cargo test` inside `src-tauri/`.
+  Rust, not a wrapper around a full iCal library. It supports `once`, `daily`,
+  `weekly` (with a day-of-week set and an N-week interval), and `monthly`
+  (same day-of-month, clamped to the last day when the month is short,
+  e.g. Jan 31 → Feb 28). Two unit tests are included; run them with `cargo test`
+  inside `src-tauri/`.
 - **Todos round-trip exactly**: editing a checkbox in the UI rewrites only
   that line's `[ ]`/`[x]`; any other markdown content in the file (notes
   above the task list) is preserved as `preambleBody` and written back
@@ -104,9 +98,9 @@ trackme/
   YAML, keeping the Rust side purely about file I/O and recurrence math.
 - File writes are debounced (500ms) in Notes/Meetings so typing doesn't
   hammer the disk, but every field commits to the actual `.md` file — there's
-  no separate "save" step, matching the vault philosophy of the design doc.
+  no separate "save" step, matching the vault philosophy.
 
-## Known gaps / next steps (flagged as v2 in the design doc)
+## Known gaps / next steps
 
 - No search across notes yet.
 - No multi-vault switching UI beyond "switch vault" (which re-runs the picker).
