@@ -20,6 +20,7 @@
     "npm:react@^18.3.1": "18.3.1",
     "npm:typescript@^5.6.3": "5.9.3",
     "npm:vite-plugin-node-polyfills@0.28": "0.28.0_vite@6.4.3",
+    "npm:vite-plugin-prismjs@^0.0.11": "0.0.11_prismjs@1.30.0",
     "npm:vite@*": "6.4.3",
     "npm:vite@^6.0.1": "6.4.3"
   },
@@ -1519,6 +1520,12 @@
       "integrity": "sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==",
       "dependencies": [
         "possible-typed-array-names"
+      ]
+    },
+    "babel-plugin-prismjs@2.1.0_prismjs@1.30.0": {
+      "integrity": "sha512-ehzSKYfeAz4U78zi/sfwsjDPlq0LvDKxNefcZTJ/iKBu+plsHsLqZhUeGf1+82LAcA35UZGbU6ksEx2Utphc/g==",
+      "dependencies": [
+        "prismjs"
       ]
     },
     "bail@2.0.2": {
@@ -3377,6 +3384,13 @@
         "vite"
       ]
     },
+    "vite-plugin-prismjs@0.0.11_prismjs@1.30.0": {
+      "integrity": "sha512-20NBQxg/zH+3FTrlU6BQTob720xkuXNYtrx7psAQ4E6pMcRDeLEK77QU9kXURU587+f2To7ASH1JVTGbXVV/vQ==",
+      "dependencies": [
+        "@babel/core",
+        "babel-plugin-prismjs"
+      ]
+    },
     "vite@6.4.3": {
       "integrity": "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A==",
       "dependencies": [
@@ -3462,6 +3476,7 @@
         "npm:react@^18.3.1",
         "npm:typescript@^5.6.3",
         "npm:vite-plugin-node-polyfills@0.28",
+        "npm:vite-plugin-prismjs@^0.0.11",
         "npm:vite@^6.0.1"
       ]
     }

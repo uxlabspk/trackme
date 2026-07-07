@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import prismjs from "vite-plugin-prismjs";
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -17,6 +18,31 @@ export default defineConfig(async () => ({
         global: false,
         process: false,
       },
+    }),
+    // Prism's own language loader (prismjs/components.js) uses a runtime
+    // `require.resolve(pathToLanguage)` call to lazy-load grammars, which
+    // doesn't exist in the browser/webview. This plugin rewrites Prism's
+    // language imports at build time instead, so the runtime `require`
+    // path is never hit. Keep this list in sync with the prismjs/components
+    // imports in src/components/MarkdownEditor.tsx.
+    prismjs({
+      languages: [
+        "markup",
+        "css",
+        "clike",
+        "javascript",
+        "typescript",
+        "jsx",
+        "tsx",
+        "python",
+        "rust",
+        "bash",
+        "json",
+        "yaml",
+        "markdown",
+      ],
+      theme: "okaidia",
+      css: true,
     }),
   ],
 
