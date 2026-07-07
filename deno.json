@@ -1,0 +1,22 @@
+{
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
+  "imports": {
+    "react": "npm:react@^18.3.1",
+    "react-dom": "npm:react-dom@^18.3.1",
+    "react-dom/client": "npm:react-dom@^18.3.1/client"
+  },
+  "tasks": {
+    "dev": "deno run -A npm:vite",
+    "build": "deno run -A npm:vite build",
+    "preview": "deno run -A npm:vite preview",
+    "tauri": "deno run -A npm:@tauri-apps/cli"
+  },
+  "fmt": {
+    "include": ["src/"]
+  }
+}

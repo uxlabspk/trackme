@@ -1,0 +1,126 @@
+.milkdown-wrapper {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.milkdown-wrapper .milkdown {
+  height: 100%;
+  padding: 8px 4px 60px;
+}
+
+.milkdown-wrapper .ProseMirror {
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--ink);
+  max-width: 720px;
+}
+
+.milkdown-wrapper .ProseMirror h1,
+.milkdown-wrapper .ProseMirror h2,
+.milkdown-wrapper .ProseMirror h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.milkdown-wrapper .ProseMirror h1 {
+  font-size: 30px;
+  margin: 0.6em 0 0.3em;
+}
+
+.milkdown-wrapper .ProseMirror h2 {
+  font-size: 23px;
+  margin: 0.8em 0 0.3em;
+}
+
+.milkdown-wrapper .ProseMirror h3 {
+  font-size: 18px;
+  margin: 0.8em 0 0.3em;
+}
+
+.milkdown-wrapper .ProseMirror p {
+  margin: 0.5em 0;
+}
+
+.milkdown-wrapper .ProseMirror a {
+  color: var(--moss-deep);
+}
+
+.milkdown-wrapper .ProseMirror blockquote {
+  border-left: 3px solid var(--hairline-strong);
+  margin: 0.6em 0;
+  padding-left: 14px;
+  color: var(--ink-soft);
+}
+
+.milkdown-wrapper .ProseMirror code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--moss-soft);
+  color: var(--moss-deep);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.milkdown-wrapper .ProseMirror pre {
+  font-family: var(--font-mono) !important;
+  font-size: 13.5px !important;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin: 0.7em 0;
+  /* Colors/background come from prism-okaidia.css (imported in
+     MarkdownEditor.tsx), which targets pre[class*="language-"]. This rule
+     only owns layout so we don't fight the theme's own palette. */
+}
+
+.milkdown-wrapper .ProseMirror pre code {
+  font-family: inherit !important;
+  font-size: inherit !important;
+}
+
+.milkdown-wrapper .ProseMirror pre:not([class*="language-"]) {
+  /* Fenced code with no language tag doesn't get a Prism theme applied,
+     so give it a sensible fallback appearance. */
+  background: #1f2420;
+  color: #f7f5f0;
+  padding: 14px 16px;
+}
+
+.milkdown-wrapper .ProseMirror ul,
+.milkdown-wrapper .ProseMirror ol {
+  padding-left: 1.4em;
+}
+
+.milkdown-wrapper .ProseMirror li[data-item-type="task"] {
+  list-style: none;
+  margin-left: -1.4em;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.milkdown-wrapper .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--hairline);
+  margin: 1.4em 0;
+}
+
+.milkdown-wrapper .ProseMirror table {
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  font-size: 14px;
+}
+
+.milkdown-wrapper .ProseMirror table td,
+.milkdown-wrapper .ProseMirror table th {
+  border: 1px solid var(--hairline);
+  padding: 6px 10px;
+}
+
+.milkdown-wrapper .ProseMirror table th {
+  background: var(--paper-raised);
+  font-weight: 600;
+}
