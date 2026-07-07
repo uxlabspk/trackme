@@ -15,6 +15,7 @@
     "npm:@vitejs/plugin-react@^4.3.3": "4.7.0_vite@6.4.3",
     "npm:date-fns@^4.1.0": "4.4.0",
     "npm:gray-matter@^4.0.3": "4.0.3",
+    "npm:lucide-react@^1.23.0": "1.23.0_react@18.3.1",
     "npm:prismjs@^1.29.0": "1.30.0",
     "npm:react-dom@^18.3.1": "18.3.1_react@18.3.1",
     "npm:react@^18.3.1": "18.3.1",
@@ -2220,6 +2221,12 @@
         "yallist"
       ]
     },
+    "lucide-react@1.23.0_react@18.3.1": {
+      "integrity": "sha512-38BpJcD0JhFosxHApP/BYsBetLpQFRoTRzEzstM/XCc3jsAG7wqaY1lgVwxiUe3xqYE+lNxo2PkCmYwXWrwwIw==",
+      "dependencies": [
+        "react"
+      ]
+    },
     "magic-string@0.30.21": {
       "integrity": "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==",
       "dependencies": [
@@ -3471,6 +3478,7 @@
         "npm:@vitejs/plugin-react@^4.3.3",
         "npm:date-fns@^4.1.0",
         "npm:gray-matter@^4.0.3",
+        "npm:lucide-react@^1.23.0",
         "npm:prismjs@^1.29.0",
         "npm:react-dom@^18.3.1",
         "npm:react@^18.3.1",

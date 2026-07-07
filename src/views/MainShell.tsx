@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Calendar, FileText, CalendarDays, CheckSquare, Settings } from "lucide-react";
 import NotesView from "./NotesView";
 import MeetingsView from "./MeetingsView";
 import TodosView from "./TodosView";
@@ -11,11 +12,31 @@ interface Props {
   onSwitchVault: () => void;
 }
 
-const TABS: { id: Tab; label: string; accent: string }[] = [
-  { id: "agenda", label: "Today", accent: "var(--ink)" },
-  { id: "notes", label: "Notes", accent: "var(--moss)" },
-  { id: "meetings", label: "Meetings", accent: "var(--clay)" },
-  { id: "todos", label: "Todos", accent: "var(--slate)" },
+const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] = [
+  {
+    id: "agenda",
+    label: "Today",
+    accent: "var(--ink)",
+    icon: <Calendar size={14} />,
+  },
+  {
+    id: "notes",
+    label: "Notes",
+    accent: "var(--moss)",
+    icon: <FileText size={14} />,
+  },
+  {
+    id: "meetings",
+    label: "Meetings",
+    accent: "var(--clay)",
+    icon: <CalendarDays size={14} />,
+  },
+  {
+    id: "todos",
+    label: "Todos",
+    accent: "var(--slate)",
+    icon: <CheckSquare size={14} />,
+  },
 ];
 
 export default function MainShell({ vaultPath, onSwitchVault }: Props) {
@@ -69,7 +90,7 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
                 color: "var(--ink)",
               }}
             >
-              <span
+              {/*<span
                 style={{
                   width: 7,
                   height: 7,
@@ -77,7 +98,8 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
                   background: t.accent,
                   flexShrink: 0,
                 }}
-              />
+              />*/}
+              {t.icon}
               {t.label}
             </button>
           ))}
@@ -88,6 +110,9 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
         <button
           onClick={onSwitchVault}
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
             fontSize: 12.5,
             color: "var(--ink-soft)",
             background: "none",
@@ -97,7 +122,8 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
             padding: "8px 10px",
           }}
         >
-          Switch vault…
+          <Settings size={14} />
+          Switch vault
         </button>
       </nav>
 

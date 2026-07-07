@@ -10,6 +10,7 @@
     "tauri": "deno run -A npm:@tauri-apps/cli"
   },
   "dependencies": {
+    "lucide-react": "^1.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "@tauri-apps/api": "^2.5.0",
