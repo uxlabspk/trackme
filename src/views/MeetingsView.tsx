@@ -13,6 +13,7 @@ import {
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { MeetingFile, MeetingFrontmatter, Recurrence, VaultEntry } from "../lib/types";
 import { format, addDays } from "date-fns";
+import { Trash2 } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -227,6 +228,9 @@ export default function MeetingsView({ vaultPath }: Props) {
                 <button
                   onClick={handleDelete}
                   style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                     border: "none",
                     background: "none",
                     color: "var(--danger)",
@@ -236,6 +240,7 @@ export default function MeetingsView({ vaultPath }: Props) {
                     marginTop: 6,
                   }}
                 >
+                  <Trash2 size={14} />
                   Delete
                 </button>
               </div>

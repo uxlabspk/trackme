@@ -11,6 +11,7 @@ import {
   toggleTodoItem,
 } from "../lib/todos";
 import type { TodoFile, VaultEntry } from "../lib/types";
+import { Trash2 } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -215,8 +216,18 @@ export default function TodosView({ vaultPath }: Props) {
               </div>
               <button
                 onClick={handleDeleteList}
-                style={{ border: "none", background: "none", color: "var(--danger)", fontSize: 13, cursor: "pointer" }}
+                style={{ 
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  border: "none", 
+                  background: "none", 
+                  color: "var(--danger)", 
+                  fontSize: 13, 
+                  cursor: "pointer" 
+                }}
               >
+                <Trash2 size={14} />
                 Delete list
               </button>
             </header>
