@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MilkdownProvider } from "@milkdown/react";
 import FileTreeList from "../components/FileTreeList";
 import MarkdownEditor from "../components/MarkdownEditor";
+import Dialog from "../components/Dialog";
 import { deleteFile, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
@@ -27,6 +28,8 @@ export default function NotesView({ vaultPath }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState<NoteFile | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
   const saveTimer = useRef<number | null>(null);
 
   const refreshTree = useCallback(async () => {
@@ -71,9 +74,7 @@ export default function NotesView({ vaultPath }: Props) {
     [vaultPath],
   );
 
-  async function handleNewNote() {
-    const title = window.prompt("Note title?");
-    if (!title) return;
+  async function createNote(title: string) {
     const relPath = `notes/${slugify(title)}.md`;
     const now = new Date().toISOString();
     const raw = serializeFrontmatter(
@@ -83,6 +84,18 @@ export default function NotesView({ vaultPath }: Props) {
     await writeFile(joinPath(vaultPath, relPath), raw);
     await refreshTree();
     setSelected(relPath);
+  }
+
+  function openNewDialog() {
+    setNewTitle("");
+    setNewOpen(true);
+  }
+
+  async function submitNewNote() {
+    const title = newTitle.trim();
+    if (!title) return;
+    setNewOpen(false);
+    await createNote(title);
   }
 
   async function handleDelete() {
@@ -117,7 +130,7 @@ export default function NotesView({ vaultPath }: Props) {
             NOTES
           </h2>
           <button
-            onClick={handleNewNote}
+            onClick={openNewDialog}
             title="New note"
             style={{
               border: "1px solid var(--hairline-strong)",
@@ -234,6 +247,66 @@ export default function NotesView({ vaultPath }: Props) {
           </>
         )}
       </section>
+
+      <Dialog
+        open={newOpen}
+        title="New note"
+        onClose={() => setNewOpen(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setNewOpen(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitNewNote}
+              disabled={!newTitle.trim()}
+              style={{
+                border: "none",
+                background: "var(--moss)",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: newTitle.trim() ? "pointer" : "not-allowed",
+                opacity: newTitle.trim() ? 1 : 0.5,
+              }}
+            >
+              Create
+            </button>
+          </>
+        }
+      >
+        <input
+          autoFocus
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submitNewNote();
+          }}
+          placeholder="Note title"
+          style={{
+            width: "100%",
+            fontFamily: "var(--font-display)",
+            fontSize: 15,
+            padding: "9px 11px",
+            border: "1px solid var(--hairline-strong)",
+            borderRadius: "var(--radius-sm)",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+      </Dialog>
     </div>
   );
 }
