@@ -35,6 +35,7 @@ export interface MeetingFrontmatter {
   duration_minutes?: number;
   link?: string;
   recurrence?: Recurrence;
+  completedDates?: string[];
   [key: string]: unknown;
 }
 

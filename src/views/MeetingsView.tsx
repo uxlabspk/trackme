@@ -338,7 +338,7 @@ export default function MeetingsView({ vaultPath }: Props) {
                 </div>
               </div>
 
-              {meeting.frontmatter.link?.trim() && (
+              {/* {meeting.frontmatter.link?.trim() && (
                 <button
                   onClick={() => window.open(meeting.frontmatter.link!.trim(), "_blank")}
                   style={{
@@ -358,7 +358,7 @@ export default function MeetingsView({ vaultPath }: Props) {
                 >
                   Launch meeting
                 </button>
-              )}
+              )} */}
 
               <div
                 style={{

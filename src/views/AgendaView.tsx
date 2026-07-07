@@ -7,7 +7,7 @@ import {
   readFile,
   writeFile,
 } from "../lib/bridge";
-import { parseFrontmatter } from "../lib/frontmatter";
+import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import { parseTodoFile, serializeTodoFile, toggleTodoItem } from "../lib/todos";
 import type { MeetingFrontmatter, TodoFile, VaultEntry } from "../lib/types";
 import { Copy, CopyCheck, CopyIcon } from "lucide-react";
@@ -22,6 +22,7 @@ interface TodayMeeting {
   time?: string;
   durationMinutes?: number;
   link?: string;
+  completed: boolean;
   relPath: string;
 }
 
@@ -55,6 +56,7 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
           time: frontmatter.time,
           durationMinutes: frontmatter.duration_minutes,
           link: frontmatter.link,
+          completed: (frontmatter.completedDates ?? []).includes(today),
           relPath: entry.rel_path,
         });
       }
@@ -85,6 +87,24 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
       cancelled = true;
     };
   }, [loadMeetings, loadTodoFiles]);
+
+  async function handleToggleMeeting(relPath: string) {
+    if (!meetings) return;
+    const current = meetings.find((m) => m.relPath === relPath);
+    if (!current) return;
+    const raw = await readFile(joinPath(vaultPath, relPath));
+    const { frontmatter, body } = parseFrontmatter<MeetingFrontmatter>(raw);
+    const dates = frontmatter.completedDates ?? [];
+    const completed = dates.includes(today);
+    const nextDates = completed ? dates.filter((d) => d !== today) : [...dates, today];
+    await writeFile(
+      joinPath(vaultPath, relPath),
+      serializeFrontmatter({ ...frontmatter, completedDates: nextDates }, body),
+    );
+    setMeetings(
+      meetings.map((m) => (m.relPath === relPath ? { ...m, completed: !completed } : m)),
+    );
+  }
 
   async function handleToggleTodo(relPath: string, itemId: string) {
     if (!todoFiles) return;
@@ -178,21 +198,55 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
                     gap: 14,
                     padding: "12px 16px",
                     borderRadius: "var(--radius-md)",
-                    background: "var(--clay-soft)",
+                    background: m.completed ? "var(--paper-raised)" : "var(--clay-soft)",
+                    opacity: m.completed ? 0.7 : 1,
                   }}
                 >
+                  <button
+                    onClick={() => handleToggleMeeting(m.relPath)}
+                    aria-label={m.completed ? "Mark as not conducted" : "Mark as conducted"}
+                    title={m.completed ? "Conducted" : "Mark conducted"}
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: 5,
+                      border: m.completed ? "none" : "1.5px solid var(--clay)",
+                      background: m.completed ? "var(--clay)" : "none",
+                      color: "#fff",
+                      flexShrink: 0,
+                      padding: 0,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {m.completed ? "✓" : ""}
+                  </button>
                   <span
                     style={{
                       fontFamily: "var(--font-mono)",
                       fontSize: 13,
                       fontWeight: 600,
-                      color: "var(--clay-deep)",
+                      color: m.completed ? "var(--ink-soft)" : "var(--clay-deep)",
                       minWidth: 56,
+                      textDecoration: m.completed ? "line-through" : "none",
                     }}
                   >
                     {m.time ?? "—"}
                   </span>
-                  <span style={{ fontSize: 14.5, fontWeight: 500 }}>{m.title}</span>
+                  <span
+                    style={{
+                      fontSize: 14.5,
+                      fontWeight: 500,
+                      textDecoration: m.completed ? "line-through" : "none",
+                      color: m.completed ? "var(--ink-soft)" : "inherit",
+                    }}
+                  >
+                    {m.title}
+                  </span>
 
                   <div style={{ flex: 1 }} />
 
