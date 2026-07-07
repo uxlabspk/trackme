@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Calendar, FileText, CalendarDays, CheckSquare, Settings } from "lucide-react";
+import { Calendar, FileText, CalendarDays, CheckSquare, Settings, FolderKanban } from "lucide-react";
 import NotesView from "./NotesView";
 import MeetingsView from "./MeetingsView";
 import TodosView from "./TodosView";
 import AgendaView from "./AgendaView";
+import ProjectsView from "./ProjectsView";
 
-type Tab = "agenda" | "notes" | "meetings" | "todos";
+type Tab = "agenda" | "notes" | "meetings" | "todos" | "projects";
 
 interface Props {
   vaultPath: string;
@@ -36,6 +37,12 @@ const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] 
     label: "Todos",
     accent: "var(--slate)",
     icon: <CheckSquare size={14} />,
+  },
+  {
+    id: "projects",
+    label: "Projects",
+    accent: "var(--moss)",
+    icon: <FolderKanban size={14} />,
   },
 ];
 
@@ -132,6 +139,7 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
         {tab === "notes" && <NotesView vaultPath={vaultPath} />}
         {tab === "meetings" && <MeetingsView vaultPath={vaultPath} />}
         {tab === "todos" && <TodosView vaultPath={vaultPath} />}
+        {tab === "projects" && <ProjectsView vaultPath={vaultPath} />}
       </main>
     </div>
   );

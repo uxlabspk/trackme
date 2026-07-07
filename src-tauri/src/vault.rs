@@ -16,7 +16,7 @@ pub struct VaultEntry {
 pub fn bootstrap_vault(root: &str) -> anyhow::Result<()> {
     let root = Path::new(root);
     fs::create_dir_all(root)?;
-    for sub in ["notes", "meetings", "todos", ".trackme"] {
+    for sub in ["notes", "meetings", "todos", "projects", ".trackme"] {
         fs::create_dir_all(root.join(sub))?;
     }
 
@@ -25,6 +25,19 @@ pub fn bootstrap_vault(root: &str) -> anyhow::Result<()> {
         fs::write(
             &todos_default,
             "---\nname: Todos\n---\n\n- [ ] Welcome to TrackMe — check this off to try it out\n",
+        )?;
+    }
+
+    let project_default = root.join("projects").join("trackme.md");
+    if !project_default.exists() {
+        fs::write(
+            &project_default,
+            "---\n\
+name: TrackMe\n\
+description: My personal all-in-one workspace\n\
+columns:\n  - Backlog\n  - To Do\n  - In Progress\n  - Done\n\
+tasks:\n  - id: seed-1\n    title: Sketch the Projects section\n    description: A Kanban board per project, built for solo work\n    status: Done\n    createdAt: null\n    doneAt: null\n  - id: seed-2\n    title: Add drag-and-drop between columns\n    status: In Progress\n    createdAt: null\n    doneAt: null\n  - id: seed-3\n    title: Polish empty states\n    status: To Do\n    createdAt: null\n    doneAt: null\n\
+---\n\n",
         )?;
     }
 

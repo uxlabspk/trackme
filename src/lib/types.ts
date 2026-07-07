@@ -72,3 +72,26 @@ export interface MeetingOccurrence {
   time?: string;
   durationMinutes?: number;
 }
+
+export interface ProjectTask {
+  id: string;
+  title: string;
+  description?: string;
+  status: string; // column name
+  createdAt?: string | null;
+  doneAt?: string | null;
+}
+
+export interface ProjectFrontmatter {
+  name?: string;
+  description?: string;
+  columns?: string[];
+  tasks?: ProjectTask[];
+  [key: string]: unknown;
+}
+
+export interface ProjectFile {
+  relPath: string;
+  frontmatter: ProjectFrontmatter;
+  body: string; // freeform markdown notes, preserved on save
+}
