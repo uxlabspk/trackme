@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
+import Dialog from "../components/Dialog";
 import { deleteFile, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
 import {
   addTodoItem,
@@ -30,6 +31,8 @@ export default function TodosView({ vaultPath }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [todo, setTodo] = useState<TodoFile | null>(null);
   const [newItemText, setNewItemText] = useState("");
+  const [newOpen, setNewOpen] = useState(false);
+  const [newName, setNewName] = useState("");
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "todos"));
@@ -70,14 +73,24 @@ export default function TodosView({ vaultPath }: Props) {
     await writeFile(joinPath(vaultPath, next.relPath), serializeTodoFile(next));
   }
 
-  async function handleNewList() {
-    const name = window.prompt("Todo list name?");
-    if (!name) return;
+  async function createList(name: string) {
     const relPath = `todos/${slugify(name)}.md`;
     const raw = serializeTodoFileFresh(name);
     await writeFile(joinPath(vaultPath, relPath), raw);
     await refreshTree();
     setSelected(relPath);
+  }
+
+  function openNewDialog() {
+    setNewName("");
+    setNewOpen(true);
+  }
+
+  async function submitNewList() {
+    const name = newName.trim();
+    if (!name) return;
+    setNewOpen(false);
+    await createList(name);
   }
 
   function serializeTodoFileFresh(name: string): string {
@@ -123,7 +136,7 @@ export default function TodosView({ vaultPath }: Props) {
             TODO LISTS
           </h2>
           <button
-            onClick={handleNewList}
+            onClick={openNewDialog}
             title="New todo list"
             style={{
               border: "1px solid var(--hairline-strong)",
@@ -316,6 +329,66 @@ export default function TodosView({ vaultPath }: Props) {
           </>
         )}
       </section>
+
+      <Dialog
+        open={newOpen}
+        title="New todo list"
+        onClose={() => setNewOpen(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setNewOpen(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitNewList}
+              disabled={!newName.trim()}
+              style={{
+                border: "none",
+                background: "var(--slate)",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: newName.trim() ? "pointer" : "not-allowed",
+                opacity: newName.trim() ? 1 : 0.5,
+              }}
+            >
+              Create
+            </button>
+          </>
+        }
+      >
+        <input
+          autoFocus
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submitNewList();
+          }}
+          placeholder="Todo list name"
+          style={{
+            width: "100%",
+            fontFamily: "var(--font-display)",
+            fontSize: 15,
+            padding: "9px 11px",
+            border: "1px solid var(--hairline-strong)",
+            borderRadius: "var(--radius-sm)",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+      </Dialog>
     </div>
   );
 }

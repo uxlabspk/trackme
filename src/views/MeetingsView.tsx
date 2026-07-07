@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import RecurrenceEditor from "../components/RecurrenceEditor";
+import Dialog from "../components/Dialog";
 import {
   computeMeetingOccurrences,
   deleteFile,
@@ -43,6 +44,8 @@ export default function MeetingsView({ vaultPath }: Props) {
   const [meeting, setMeeting] = useState<MeetingFile | null>(null);
   const [occurrences, setOccurrences] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "meetings"));
@@ -95,9 +98,7 @@ export default function MeetingsView({ vaultPath }: Props) {
     setDirty(false);
   }
 
-  async function handleNewMeeting() {
-    const title = window.prompt("Meeting series name?");
-    if (!title) return;
+  async function createMeeting(title: string) {
     const relPath = `meetings/${slugify(title)}.md`;
     const frontmatter: MeetingFrontmatter = {
       title,
@@ -109,6 +110,18 @@ export default function MeetingsView({ vaultPath }: Props) {
     await writeFile(joinPath(vaultPath, relPath), raw);
     await refreshTree();
     setSelected(relPath);
+  }
+
+  function openNewDialog() {
+    setNewTitle("");
+    setNewOpen(true);
+  }
+
+  async function submitNewMeeting() {
+    const title = newTitle.trim();
+    if (!title) return;
+    setNewOpen(false);
+    await createMeeting(title);
   }
 
   async function handleDelete() {
@@ -149,7 +162,7 @@ export default function MeetingsView({ vaultPath }: Props) {
             MEETINGS
           </h2>
           <button
-            onClick={handleNewMeeting}
+            onClick={openNewDialog}
             title="New meeting series"
             style={{
               border: "1px solid var(--hairline-strong)",
@@ -400,6 +413,66 @@ export default function MeetingsView({ vaultPath }: Props) {
           </>
         )}
       </section>
+
+      <Dialog
+        open={newOpen}
+        title="New meeting series"
+        onClose={() => setNewOpen(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setNewOpen(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitNewMeeting}
+              disabled={!newTitle.trim()}
+              style={{
+                border: "none",
+                background: "var(--clay)",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: newTitle.trim() ? "pointer" : "not-allowed",
+                opacity: newTitle.trim() ? 1 : 0.5,
+              }}
+            >
+              Create
+            </button>
+          </>
+        }
+      >
+        <input
+          autoFocus
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submitNewMeeting();
+          }}
+          placeholder="Meeting series name"
+          style={{
+            width: "100%",
+            fontFamily: "var(--font-display)",
+            fontSize: 15,
+            padding: "9px 11px",
+            border: "1px solid var(--hairline-strong)",
+            borderRadius: "var(--radius-sm)",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+      </Dialog>
     </div>
   );
 }
