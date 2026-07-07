@@ -5,6 +5,7 @@ import MarkdownEditor from "../components/MarkdownEditor";
 import { deleteFile, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
+import { Trash2 } from "lucide-react";
 import "../styles/milkdown.css";
 
 interface Props {
@@ -202,6 +203,9 @@ export default function NotesView({ vaultPath }: Props) {
               <button
                 onClick={handleDelete}
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
                   border: "none",
                   background: "none",
                   color: "var(--danger)",
@@ -209,6 +213,7 @@ export default function NotesView({ vaultPath }: Props) {
                   cursor: "pointer",
                 }}
               >
+                <Trash2 size={14} />
                 Delete
               </button>
             </header>
