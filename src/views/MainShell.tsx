@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Calendar, FileText, CalendarDays, CheckSquare, Settings, FolderKanban } from "lucide-react";
+import { Calendar, FileText, CalendarDays, CheckSquare, Settings, FolderKanban, Sun, Moon } from "lucide-react";
 import NotesView from "./NotesView";
 import MeetingsView from "./MeetingsView";
 import TodosView from "./TodosView";
 import AgendaView from "./AgendaView";
 import ProjectsView from "./ProjectsView";
+import { useTheme } from "../lib/ThemeContext";
 
 type Tab = "agenda" | "notes" | "meetings" | "todos" | "projects";
 
@@ -48,6 +49,7 @@ const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] 
 
 export default function MainShell({ vaultPath, onSwitchVault }: Props) {
   const [tab, setTab] = useState<Tab>("agenda");
+  const { theme, toggleTheme } = useTheme();
   const vaultName = vaultPath.split(/[/\\]/).filter(Boolean).pop() ?? "Vault";
 
   return (
@@ -60,6 +62,7 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
           display: "flex",
           flexDirection: "column",
           padding: "18px 12px",
+          background: "var(--paper)",
         }}
       >
         <div
@@ -95,17 +98,19 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
                 fontSize: 14,
                 fontWeight: tab === t.id ? 600 : 500,
                 color: "var(--ink)",
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (tab !== t.id) {
+                  e.currentTarget.style.background = "var(--paper-raised)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (tab !== t.id) {
+                  e.currentTarget.style.background = "transparent";
+                }
               }}
             >
-              {/*<span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: t.accent,
-                  flexShrink: 0,
-                }}
-              />*/}
               {t.icon}
               {t.label}
             </button>
@@ -114,24 +119,63 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
 
         <div style={{ flex: 1 }} />
 
-        <button
-          onClick={onSwitchVault}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 12.5,
-            color: "var(--ink-soft)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            textAlign: "left",
-            padding: "8px 10px",
-          }}
-        >
-          <Settings size={14} />
-          Switch vault
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            onClick={toggleTheme}
+            title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 12.5,
+              color: "var(--ink-soft)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px 10px",
+              borderRadius: "var(--radius-sm)",
+              transition: "background 0.15s ease, color 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--paper-raised)";
+              e.currentTarget.style.color = "var(--ink)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--ink-soft)";
+            }}
+          >
+            {theme === "light" ? <><Moon size={14} />Lights Off</> : <><Sun size={14} />Lights On</>}
+          </button>
+          <button
+            onClick={onSwitchVault}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 12.5,
+              color: "var(--ink-soft)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+              padding: "8px 10px",
+              borderRadius: "var(--radius-sm)",
+              transition: "background 0.15s ease, color 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--paper-raised)";
+              e.currentTarget.style.color = "var(--ink)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--ink-soft)";
+            }}
+          >
+            <Settings size={14} />
+            Switch vault
+          </button>
+        </div>
       </nav>
 
       <main style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>

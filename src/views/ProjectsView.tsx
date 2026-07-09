@@ -215,7 +215,7 @@ export default function ProjectsView({ vaultPath }: Props) {
             title="New project"
             style={{
               border: "1px solid var(--hairline-strong)",
-              background: "#fff",
+              background: "var(--paper-raised)",
               borderRadius: "var(--radius-sm)",
               width: 24,
               height: 24,
@@ -278,6 +278,7 @@ export default function ProjectsView({ vaultPath }: Props) {
                     outline: "none",
                     background: "transparent",
                     width: "100%",
+                    color: "var(--ink)",
                   }}
                 />
                 <input
@@ -390,6 +391,8 @@ export default function ProjectsView({ vaultPath }: Props) {
                             borderRadius: "var(--radius-sm)",
                             padding: "3px 6px",
                             outline: "none",
+                            background: "var(--paper-raised)",
+                            color: "var(--ink)",
                           }}
                         />
                       ) : (
@@ -471,7 +474,7 @@ export default function ProjectsView({ vaultPath }: Props) {
                             openCard(task);
                           }}
                           style={{
-                            background: "#fff",
+                            background: "var(--paper-raised)",
                             border: "1px solid var(--hairline)",
                             borderRadius: "var(--radius-md)",
                             padding: "10px 12px",
@@ -554,6 +557,7 @@ export default function ProjectsView({ vaultPath }: Props) {
                           background: "transparent",
                           fontSize: 13.5,
                           fontFamily: "var(--font-body)",
+                          color: "var(--ink)",
                         }}
                       />
                     </div>
@@ -596,7 +600,7 @@ export default function ProjectsView({ vaultPath }: Props) {
               onClick={() => setNewOpen(false)}
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 padding: "7px 14px",
                 fontSize: 13,
@@ -642,6 +646,8 @@ export default function ProjectsView({ vaultPath }: Props) {
             borderRadius: "var(--radius-sm)",
             outline: "none",
             boxSizing: "border-box",
+            background: "var(--paper-raised)",
+            color: "var(--ink)",
           }}
         />
       </Dialog>
@@ -656,7 +662,7 @@ export default function ProjectsView({ vaultPath }: Props) {
               onClick={deleteCard}
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 color: "var(--danger)",
                 borderRadius: "var(--radius-sm)",
                 padding: "7px 14px",
@@ -671,7 +677,7 @@ export default function ProjectsView({ vaultPath }: Props) {
               onClick={() => setEditing(null)}
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 padding: "7px 14px",
                 fontSize: 13,
@@ -713,6 +719,8 @@ export default function ProjectsView({ vaultPath }: Props) {
               borderRadius: "var(--radius-sm)",
               outline: "none",
               boxSizing: "border-box",
+              background: "var(--paper-raised)",
+              color: "var(--ink)",
             }}
           />
           <textarea
@@ -730,6 +738,8 @@ export default function ProjectsView({ vaultPath }: Props) {
               outline: "none",
               boxSizing: "border-box",
               resize: "vertical",
+              background: "var(--paper-raised)",
+              color: "var(--ink)",
             }}
           />
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -744,7 +754,8 @@ export default function ProjectsView({ vaultPath }: Props) {
                 border: "1px solid var(--hairline-strong)",
                 borderRadius: "var(--radius-sm)",
                 outline: "none",
-                background: "#fff",
+                background: "var(--paper-raised)",
+                color: "var(--ink)",
               }}
             >
               {columns.map((c) => (

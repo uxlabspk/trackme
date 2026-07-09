@@ -41,12 +41,13 @@ export default function Dialog({ open, title, onClose, children, footer }: Dialo
         role="dialog"
         aria-modal="true"
         style={{
-          background: "#fff",
+          background: "var(--paper-raised)",
           borderRadius: "var(--radius-lg)",
           width: "min(420px, calc(100vw - 32px))",
           padding: "20px 22px",
-          boxShadow: "0 18px 50px rgba(20, 24, 20, 0.28)",
+          boxShadow: "0 18px 50px rgba(0, 0, 0, 0.3)",
           fontFamily: "var(--font-display)",
+          border: "1px solid var(--hairline)",
         }}
       >
         <h3

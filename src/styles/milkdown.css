@@ -19,7 +19,8 @@
   color: var(--ink);
   width: 100%;
   max-width: 760px;
-  caret-color: var(--moss-deep);
+  caret-color: var(--moss);
+  background: transparent;
 }
 
 .milkdown-wrapper .ProseMirror :first-child {
@@ -132,7 +133,7 @@
   height: 16px;
   border: 1.5px solid var(--hairline-strong);
   border-radius: 4px;
-  background: #fff;
+  background: var(--paper-raised);
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
@@ -145,6 +146,12 @@
   input[type="checkbox"]:checked {
   background: var(--moss);
   border-color: var(--moss);
+}
+
+.milkdown-wrapper .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--hairline-strong);
+  margin: 1.6em 0;
 }
 
 .milkdown-wrapper
@@ -205,13 +212,11 @@
   font-size: 13.5px !important;
   line-height: 1.6 !important;
   border-radius: var(--radius-md);
-  border: 1px solid #2b312b;
+  border: 1px solid var(--hairline);
   overflow-x: auto;
   margin: 0.9em 0;
   position: relative;
-  /* Colors/background come from prism-okaidia.css (imported in
-     MarkdownEditor.tsx), which targets pre[class*="language-"]. This rule
-     only owns layout so we don't fight the theme's own palette. */
+  background: var(--paper-raised);
 }
 
 .milkdown-wrapper .ProseMirror pre code {
@@ -226,13 +231,14 @@
 .milkdown-wrapper .ProseMirror pre:not([class*="language-"]) {
   /* Fenced code with no language tag doesn't get a Prism theme applied,
      so give it a sensible fallback appearance. */
-  background: #1f2420;
-  color: #f7f5f0;
+  background: var(--paper-raised);
+  color: var(--ink);
   padding: 14px 16px;
 }
 
 .milkdown-wrapper .ProseMirror pre[class*="language-"] {
   padding: 14px 16px;
+  background: var(--paper-raised);
 }
 
 /* Tables --------------------------------------------------------------- */
@@ -273,12 +279,6 @@
   border: 1px solid var(--hairline);
   margin: 0.4em 0;
   display: block;
-}
-
-.milkdown-wrapper .ProseMirror hr {
-  border: none;
-  border-top: 1px solid var(--hairline-strong);
-  margin: 1.6em 0;
 }
 
 /* Empty first line (Notion/Obsidian-style prompt) ----------------------- */

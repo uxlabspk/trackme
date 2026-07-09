@@ -167,7 +167,7 @@ export default function MeetingsView({ vaultPath }: Props) {
             title="New meeting series"
             style={{
               border: "1px solid var(--hairline-strong)",
-              background: "#fff",
+              background: "var(--paper-raised)",
               borderRadius: "var(--radius-sm)",
               width: 24,
               height: 24,
@@ -223,6 +223,7 @@ export default function MeetingsView({ vaultPath }: Props) {
                     outline: "none",
                     background: "transparent",
                     width: "100%",
+                    color: "var(--ink)",
                   }}
                 />
                 <button
@@ -278,6 +279,8 @@ export default function MeetingsView({ vaultPath }: Props) {
                       border: "1px solid var(--hairline-strong)",
                       fontSize: 14,
                       fontFamily: "var(--font-mono)",
+                      background: "var(--paper-raised)",
+                      color: "var(--ink)",
                     }}
                   />
                 </div>
@@ -305,6 +308,8 @@ export default function MeetingsView({ vaultPath }: Props) {
                       borderRadius: "var(--radius-sm)",
                       border: "1px solid var(--hairline-strong)",
                       fontSize: 14,
+                      background: "var(--paper-raised)",
+                      color: "var(--ink)",
                     }}
                   />
                 </div>
@@ -333,6 +338,8 @@ export default function MeetingsView({ vaultPath }: Props) {
                       fontSize: 14,
                       fontFamily: "var(--font-mono)",
                       boxSizing: "border-box",
+                      background: "var(--paper-raised)",
+                      color: "var(--ink)",
                     }}
                   />
                 </div>
@@ -403,6 +410,8 @@ export default function MeetingsView({ vaultPath }: Props) {
                   fontSize: 14.5,
                   lineHeight: 1.6,
                   resize: "vertical",
+                  background: "var(--paper-raised)",
+                  color: "var(--ink)",
                 }}
               />
             </div>
@@ -479,7 +488,7 @@ export default function MeetingsView({ vaultPath }: Props) {
               onClick={() => setNewOpen(false)}
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 padding: "7px 14px",
                 fontSize: 13,
@@ -525,6 +534,8 @@ export default function MeetingsView({ vaultPath }: Props) {
             borderRadius: "var(--radius-sm)",
             outline: "none",
             boxSizing: "border-box",
+            background: "var(--paper-raised)",
+            color: "var(--ink)",
           }}
         />
       </Dialog>

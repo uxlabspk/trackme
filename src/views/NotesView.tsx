@@ -189,7 +189,7 @@ export default function NotesView({ vaultPath }: Props) {
               title="New folder"
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 width: 24,
                 height: 24,
@@ -197,7 +197,7 @@ export default function NotesView({ vaultPath }: Props) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "var(--moss-deep)",
+                color: "var(--moss)",
               }}
             >
               <FolderPlus size={14} />
@@ -207,14 +207,14 @@ export default function NotesView({ vaultPath }: Props) {
               title="New note"
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 width: 24,
                 height: 24,
                 cursor: "pointer",
                 fontSize: 15,
                 lineHeight: 1,
-                color: "var(--moss-deep)",
+                color: "var(--moss)",
               }}
             >
               +
@@ -277,6 +277,7 @@ export default function NotesView({ vaultPath }: Props) {
                     outline: "none",
                     background: "transparent",
                     width: "100%",
+                    color: "var(--ink)",
                   }}
                 />
                 <div
@@ -335,7 +336,7 @@ export default function NotesView({ vaultPath }: Props) {
               onClick={() => setNewOpen(false)}
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 padding: "7px 14px",
                 fontSize: 13,
@@ -381,6 +382,8 @@ export default function NotesView({ vaultPath }: Props) {
             borderRadius: "var(--radius-sm)",
             outline: "none",
             boxSizing: "border-box",
+            background: "var(--paper-raised)",
+            color: "var(--ink)",
           }}
         />
         <div
@@ -405,7 +408,7 @@ export default function NotesView({ vaultPath }: Props) {
               onClick={() => setFolderOpen(false)}
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 padding: "7px 14px",
                 fontSize: 13,
@@ -451,6 +454,8 @@ export default function NotesView({ vaultPath }: Props) {
             borderRadius: "var(--radius-sm)",
             outline: "none",
             boxSizing: "border-box",
+            background: "var(--paper-raised)",
+            color: "var(--ink)",
           }}
         />
         <div

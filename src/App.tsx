@@ -4,6 +4,7 @@ import VaultPicker from "./views/VaultPicker";
 import MainShell from "./views/MainShell";
 import { getLastVaultPath } from "./lib/appConfig";
 import { bootstrapVault } from "./lib/bridge";
+import { ThemeProvider } from "./lib/ThemeContext";
 
 type Screen = "loading" | "welcome" | "vault-picker" | "main";
 
@@ -29,29 +30,23 @@ export default function App() {
     return <div style={{ height: "100%", background: "var(--paper)" }} />;
   }
 
-  if (screen === "welcome") {
-    return <Welcome onGetStarted={() => setScreen("vault-picker")} />;
-  }
-
-  if (screen === "vault-picker") {
-    return (
-      <VaultPicker
-        onVaultReady={(path) => {
-          setVaultPath(path);
-          setScreen("main");
-        }}
-      />
-    );
-  }
-
-  if (screen === "main" && vaultPath) {
-    return (
-      <MainShell
-        vaultPath={vaultPath}
-        onSwitchVault={() => setScreen("vault-picker")}
-      />
-    );
-  }
-
-  return null;
+  return (
+    <ThemeProvider>
+      {screen === "welcome" && <Welcome onGetStarted={() => setScreen("vault-picker")} />}
+      {screen === "vault-picker" && (
+        <VaultPicker
+          onVaultReady={(path) => {
+            setVaultPath(path);
+            setScreen("main");
+          }}
+        />
+      )}
+      {screen === "main" && vaultPath && (
+        <MainShell
+          vaultPath={vaultPath}
+          onSwitchVault={() => setScreen("vault-picker")}
+        />
+      )}
+    </ThemeProvider>
+  );
 }

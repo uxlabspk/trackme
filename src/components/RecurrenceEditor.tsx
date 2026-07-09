@@ -57,7 +57,7 @@ export default function RecurrenceEditor({ value, onChange }: Props) {
                 padding: "7px 14px",
                 borderRadius: "var(--radius-md)",
                 border: "1px solid var(--hairline-strong)",
-                background: value.freq === opt.id ? "var(--clay)" : "#fff",
+                background: value.freq === opt.id ? "var(--clay)" : "var(--paper-raised)",
                 color: value.freq === opt.id ? "#fff" : "var(--ink)",
                 fontSize: 13,
                 fontWeight: 600,
@@ -86,7 +86,7 @@ export default function RecurrenceEditor({ value, onChange }: Props) {
                     height: 32,
                     borderRadius: "50%",
                     border: "1px solid var(--hairline-strong)",
-                    background: active ? "var(--clay)" : "#fff",
+                    background: active ? "var(--clay)" : "var(--paper-raised)",
                     color: active ? "#fff" : "var(--ink)",
                     fontSize: 12.5,
                     fontWeight: 700,
@@ -117,6 +117,8 @@ export default function RecurrenceEditor({ value, onChange }: Props) {
               borderRadius: "var(--radius-sm)",
               border: "1px solid var(--hairline-strong)",
               fontSize: 14,
+              background: "var(--paper-raised)",
+              color: "var(--ink)",
             }}
           />
         </div>
@@ -136,6 +138,8 @@ export default function RecurrenceEditor({ value, onChange }: Props) {
               border: "1px solid var(--hairline-strong)",
               fontSize: 14,
               fontFamily: "var(--font-mono)",
+              background: "var(--paper-raised)",
+              color: "var(--ink)",
             }}
           />
         </div>
@@ -152,6 +156,8 @@ export default function RecurrenceEditor({ value, onChange }: Props) {
               border: "1px solid var(--hairline-strong)",
               fontSize: 14,
               fontFamily: "var(--font-mono)",
+              background: "var(--paper-raised)",
+              color: "var(--ink)",
             }}
           />
         </div>

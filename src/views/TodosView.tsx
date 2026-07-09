@@ -141,13 +141,13 @@ export default function TodosView({ vaultPath }: Props) {
             title="New todo list"
             style={{
               border: "1px solid var(--hairline-strong)",
-              background: "#fff",
+              background: "var(--paper-raised)",
               borderRadius: "var(--radius-sm)",
               width: 24,
               height: 24,
               cursor: "pointer",
               fontSize: 15,
-              color: "var(--slate-deep)",
+              color: "var(--slate)",
             }}
           >
             +
@@ -201,6 +201,7 @@ export default function TodosView({ vaultPath }: Props) {
                     border: "none",
                     outline: "none",
                     background: "transparent",
+                    color: "var(--ink)",
                   }}
                 />
                 <div
@@ -255,8 +256,8 @@ export default function TodosView({ vaultPath }: Props) {
                         flexShrink: 0,
                         borderRadius: "5px",
                         border: `1.5px solid ${item.checked ? "var(--slate)" : "var(--hairline-strong)"}`,
-                        background: item.checked ? "var(--slate)" : "#fff",
-                        color: "#fff",
+                        background: item.checked ? "var(--slate)" : "var(--paper-raised)",
+                        color: item.checked ? "#fff" : "var(--ink)",
                         fontSize: 13,
                         cursor: "pointer",
                         display: "flex",
@@ -351,7 +352,7 @@ export default function TodosView({ vaultPath }: Props) {
               onClick={() => setNewOpen(false)}
               style={{
                 border: "1px solid var(--hairline-strong)",
-                background: "#fff",
+                background: "var(--paper-raised)",
                 borderRadius: "var(--radius-sm)",
                 padding: "7px 14px",
                 fontSize: 13,
@@ -397,6 +398,8 @@ export default function TodosView({ vaultPath }: Props) {
             borderRadius: "var(--radius-sm)",
             outline: "none",
             boxSizing: "border-box",
+            background: "var(--paper-raised)",
+            color: "var(--ink)",
           }}
         />
       </Dialog>
