@@ -1,3 +1,52 @@
+/* ── Crepe variable overrides (map to design tokens) ─────────────── */
+.milkdown {
+  --crepe-color-background: var(--paper);
+  --crepe-color-on-background: var(--ink);
+  --crepe-color-surface: var(--paper-raised);
+  --crepe-color-surface-low: var(--hairline);
+  --crepe-color-on-surface: var(--ink);
+  --crepe-color-on-surface-variant: var(--ink-soft);
+  --crepe-color-outline: var(--hairline-strong);
+  --crepe-color-primary: var(--moss);
+  --crepe-color-secondary: var(--moss-soft);
+  --crepe-color-on-secondary: #fff;
+  --crepe-color-inverse: var(--moss-deep);
+  --crepe-color-on-inverse: #fff;
+  --crepe-color-inline-code: var(--moss-deep);
+  --crepe-color-error: var(--danger);
+  --crepe-color-hover: var(--moss-soft);
+  --crepe-color-selected: color-mix(in srgb, var(--moss-soft) 60%, var(--hairline));
+  --crepe-color-inline-area: var(--hairline);
+
+  --crepe-font-title: var(--font-display);
+  --crepe-font-default: var(--font-body);
+  --crepe-font-code: var(--font-mono);
+
+  --crepe-shadow-1: var(--shadow-sm);
+  --crepe-shadow-2: var(--shadow-md);
+}
+
+.dark .milkdown {
+  --crepe-color-background: var(--paper);
+  --crepe-color-on-background: var(--ink);
+  --crepe-color-surface: var(--paper-raised);
+  --crepe-color-surface-low: var(--hairline);
+  --crepe-color-on-surface: var(--ink);
+  --crepe-color-on-surface-variant: var(--ink-soft);
+  --crepe-color-outline: var(--hairline-strong);
+  --crepe-color-primary: var(--moss);
+  --crepe-color-secondary: var(--moss-soft);
+  --crepe-color-on-secondary: #fff;
+  --crepe-color-inverse: var(--moss);
+  --crepe-color-on-inverse: #fff;
+  --crepe-color-inline-code: var(--moss);
+  --crepe-color-error: var(--danger);
+  --crepe-color-hover: var(--moss-soft);
+  --crepe-color-selected: color-mix(in srgb, var(--moss-soft) 40%, var(--hairline));
+  --crepe-color-inline-area: var(--hairline);
+}
+
+/* ── Wrapper & editor layout ─────────────────────────────────────── */
 .milkdown-wrapper {
   height: 100%;
   overflow-y: auto;
@@ -31,7 +80,7 @@
   background: var(--moss-soft);
 }
 
-/* Headings ------------------------------------------------------------- */
+/* ── Headings ------------------------------------------------------- */
 .milkdown-wrapper .ProseMirror h1,
 .milkdown-wrapper .ProseMirror h2,
 .milkdown-wrapper .ProseMirror h3,
@@ -76,7 +125,7 @@
   color: var(--ink-soft);
 }
 
-/* Body text ------------------------------------------------------------ */
+/* ── Body text ------------------------------------------------------ */
 .milkdown-wrapper .ProseMirror p {
   margin: 0.65em 0;
 }
@@ -97,7 +146,7 @@
   font-weight: 650;
 }
 
-/* Lists ---------------------------------------------------------------- */
+/* ── Lists ---------------------------------------------------------- */
 .milkdown-wrapper .ProseMirror ul,
 .milkdown-wrapper .ProseMirror ol {
   padding-left: 1.5em;
@@ -112,7 +161,7 @@
   margin: 0.15em 0;
 }
 
-/* Task lists ----------------------------------------------------------- */
+/* ── Task lists ----------------------------------------------------- */
 .milkdown-wrapper .ProseMirror li[data-item-type="task"] {
   list-style: none;
   margin-left: -1.5em;
@@ -182,7 +231,7 @@
   text-decoration-color: var(--hairline-strong);
 }
 
-/* Blockquotes / callouts ---------------------------------------------- */
+/* ── Blockquotes / callouts ----------------------------------------- */
 .milkdown-wrapper .ProseMirror blockquote {
   border-left: 3px solid var(--moss);
   margin: 0.9em 0;
@@ -196,7 +245,7 @@
   margin: 0.3em 0;
 }
 
-/* Code ----------------------------------------------------------------- */
+/* ── Code ------------------------------------------------------------ */
 .milkdown-wrapper .ProseMirror code {
   font-family: var(--font-mono);
   font-size: 0.86em;
@@ -228,20 +277,7 @@
   color: inherit;
 }
 
-.milkdown-wrapper .ProseMirror pre:not([class*="language-"]) {
-  /* Fenced code with no language tag doesn't get a Prism theme applied,
-     so give it a sensible fallback appearance. */
-  background: var(--paper-raised);
-  color: var(--ink);
-  padding: 14px 16px;
-}
-
-.milkdown-wrapper .ProseMirror pre[class*="language-"] {
-  padding: 14px 16px;
-  background: var(--paper-raised);
-}
-
-/* Tables --------------------------------------------------------------- */
+/* ── Tables --------------------------------------------------------- */
 .milkdown-wrapper .ProseMirror table {
   border-collapse: collapse;
   margin: 1em 0;
@@ -272,7 +308,7 @@
   background: var(--moss-soft);
 }
 
-/* Media ---------------------------------------------------------------- */
+/* ── Media ---------------------------------------------------------- */
 .milkdown-wrapper .ProseMirror img {
   max-width: 100%;
   border-radius: var(--radius-md);
@@ -281,12 +317,152 @@
   display: block;
 }
 
-/* Empty first line (Notion/Obsidian-style prompt) ----------------------- */
-.milkdown-wrapper .ProseMirror p.is-empty:first-child::before {
-  content: "Start writing, or press '/' for commands…";
-  color: var(--ink-soft);
-  opacity: 0.6;
-  pointer-events: none;
-  float: left;
-  height: 0;
+/* ── Crepe widget overrides ──────────────────────────────────────── */
+
+/* Slash menu */
+.milkdown .milkdown-slash-menu {
+  background: var(--paper-raised) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.milkdown .milkdown-slash-menu .tab-group ul li.selected {
+  background: var(--moss-soft) !important;
+}
+
+.milkdown .milkdown-slash-menu .menu-groups .menu-group li.hover {
+  background: var(--moss-soft) !important;
+}
+
+.milkdown .milkdown-slash-menu .menu-groups .menu-group li.active {
+  background: color-mix(in srgb, var(--moss) 15%, var(--moss-soft)) !important;
+}
+
+.milkdown .milkdown-slash-menu .menu-groups .menu-group li svg {
+  color: var(--moss) !important;
+  fill: var(--moss) !important;
+}
+
+/* Block handle */
+.milkdown .milkdown-block-handle .operation-item:hover {
+  background: var(--moss-soft) !important;
+}
+
+.milkdown .milkdown-block-handle .operation-item.active {
+  background: color-mix(in srgb, var(--moss) 15%, var(--moss-soft)) !important;
+}
+
+.milkdown .milkdown-block-handle .operation-item svg {
+  fill: var(--ink-soft) !important;
+  color: var(--ink-soft) !important;
+}
+
+/* Toolbar (floating selection toolbar) */
+.milkdown .milkdown-toolbar {
+  background: var(--paper-raised) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.milkdown .milkdown-toolbar button:hover {
+  background: var(--moss-soft) !important;
+}
+
+.milkdown .milkdown-toolbar button.active {
+  background: var(--moss) !important;
+  color: #fff !important;
+}
+
+/* Link tooltip */
+.milkdown .milkdown-link-tooltip {
+  background: var(--paper-raised) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Code block wrapper (Crepe's CodeMirror-based code blocks) */
+.milkdown .code-block {
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+  margin: 0.9em 0 !important;
+}
+
+.milkdown .code-block .code-block-header {
+  background: var(--paper-raised) !important;
+  border-bottom: 1px solid var(--hairline) !important;
+}
+
+.milkdown .code-block .code-block-header select {
+  background: var(--paper-raised) !important;
+  color: var(--ink-soft) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  padding: 2px 6px !important;
+}
+
+.milkdown .code-block .code-block-header button {
+  color: var(--ink-soft) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.milkdown .code-block .code-block-header button:hover {
+  background: var(--moss-soft) !important;
+  color: var(--moss) !important;
+}
+
+.milkdown .code-block .cm-editor {
+  font-family: var(--font-mono) !important;
+  font-size: 13.5px !important;
+  background: transparent !important;
+}
+
+/* Image block */
+.milkdown .image-block {
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+  margin: 0.4em 0 !important;
+}
+
+.milkdown .image-block img {
+  border-radius: 0 !important;
+  border: none !important;
+  max-width: 100% !important;
+}
+
+.milkdown .image-block .image-caption {
+  font-family: var(--font-body) !important;
+  color: var(--ink-soft) !important;
+}
+
+/* Table block controls */
+.milkdown .table-block {
+  border: none !important;
+}
+
+.milkdown .table-block .button-group button {
+  color: var(--ink-soft) !important;
+}
+
+.milkdown .table-block .button-group button:hover {
+  background: var(--moss-soft) !important;
+  color: var(--moss) !important;
+}
+
+/* Latex / math */
+.milkdown .inline-latex,
+.milkdown .block-latex {
+  color: var(--ink) !important;
+}
+
+/* Placeholder */
+.milkdown .ProseMirror-empty::before {
+  color: var(--ink-soft) !important;
+  opacity: 0.6 !important;
 }

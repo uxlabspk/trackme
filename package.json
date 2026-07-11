@@ -10,31 +10,25 @@
     "tauri": "deno run -A npm:@tauri-apps/cli"
   },
   "dependencies": {
-    "@milkdown/plugin-clipboard": "^7.21.2",
+    "@milkdown/crepe": "^7.21.2",
+    "@milkdown/plugin-emoji": "^7.21.2",
+    "@milkdown/kit": "^7.21.2",
+    "gray-matter": "^4.0.3",
+    "date-fns": "^4.1.0",
     "lucide-react": "^1.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "@tauri-apps/api": "^2.5.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
-    "@tauri-apps/plugin-fs": "^2.2.0",
-    "@milkdown/kit": "^7.21.2",
-    "@milkdown/react": "^7.21.1",
-    "@milkdown/plugin-prism": "^7.20.0",
-    "@milkdown/plugin-emoji": "^7.21.2",
-    "@milkdown/plugin-upload": "^7.21.2",
-    "prismjs": "^1.29.0",
-    "gray-matter": "^4.0.3",
-    "date-fns": "^4.1.0"
+    "@tauri-apps/plugin-fs": "^2.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@types/prismjs": "^1.26.6",
     "@vitejs/plugin-react": "^4.3.3",
     "@tauri-apps/cli": "^2.5.0",
     "typescript": "^5.6.3",
     "vite": "^6.0.1",
-    "vite-plugin-node-polyfills": "^0.28.0",
-    "vite-plugin-prismjs": "^0.0.11"
+    "vite-plugin-node-polyfills": "^0.28.0"
   }
 }

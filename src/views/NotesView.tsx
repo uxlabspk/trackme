@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MilkdownProvider } from "@milkdown/react";
 import FileTreeList from "../components/FileTreeList";
 import MarkdownEditor from "../components/MarkdownEditor";
 import Dialog from "../components/Dialog";
@@ -312,18 +311,16 @@ export default function NotesView({ vaultPath }: Props) {
                 </button>
             </header>
 
-            <div style={{ flex: 1, overflow: "hidden", padding: "0 28px" }}>
-              <MilkdownProvider>
-                <MarkdownEditor
-                  key={note.relPath}
-                  value={note.body}
-                  onChange={(body) => {
-                    const next = { ...note, body };
-                    setNote(next);
-                    scheduleSave(next);
-                  }}
-                />
-              </MilkdownProvider>
+            <div style={{ flex: 1, overflow: "hidden" }}>
+              <MarkdownEditor
+                key={note.relPath}
+                value={note.body}
+                onChange={(body) => {
+                  const next = { ...note, body };
+                  setNote(next);
+                  scheduleSave(next);
+                }}
+              />
             </div>
           </>
         )}
