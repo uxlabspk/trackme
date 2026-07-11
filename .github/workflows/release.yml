@@ -1,0 +1,167 @@
+# ============================================================
+# Release Workflow — Tauri Desktop App
+# ============================================================
+# This workflow builds your Tauri app for macOS, Windows, and
+# Linux whenever you push a version tag (e.g. v1.0.0).
+# It creates a DRAFT GitHub Release with all platform binaries
+# attached, so you can review and publish it manually.
+# ============================================================
+
+name: Release
+
+# ----------------------------------------------------------
+# 1. TRIGGER — only run on version tags, never on branches/PRs
+# ----------------------------------------------------------
+on:
+  push:
+    tags:
+      - "v*"            # matches v0.1.0, v1.0.0, v2.3.4-beta, etc.
+
+# ----------------------------------------------------------
+# 2. PERMISSIONS — minimal scope for creating releases
+# ----------------------------------------------------------
+permissions:
+  contents: write        # needed to create releases and upload assets
+
+# ==========================================================
+# JOBS
+# ==========================================================
+jobs:
+
+  # --------------------------------------------------------
+  # Job A: Create the draft release (runs once, fast)
+  # --------------------------------------------------------
+  # We create the release BEFORE building so that all three
+  # platform builds can attach their artifacts to the same
+  # release ID — avoids race conditions from parallel jobs.
+  # --------------------------------------------------------
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create.outputs.id }}
+    steps:
+      - name: Create draft release
+        id: create
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Extract the tag name from the ref (e.g. "refs/tags/v1.0.0" → "v1.0.0")
+            const tag = context.ref.replace("refs/tags/", "");
+
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              tag_name:  tag,
+              name:      tag,                // release title = tag name
+              draft:     true,               // start as draft so you can review
+              generate_release_notes: true,  // auto-summarise commits since last tag
+            });
+
+            // Pass the release ID to downstream jobs
+            core.setOutput("id", release.data.id.toString());
+            core.info(`Created draft release ${tag} (ID: ${release.data.id})`);
+
+  # --------------------------------------------------------
+  # Job B: Build the app on each platform (runs in parallel)
+  # --------------------------------------------------------
+  build:
+    needs: create-release          # wait for the release to exist first
+    strategy:
+      fail-fast: false             # if one platform fails, keep building the others
+      matrix:
+        include:
+          # — macOS: universal binary (Intel + Apple Silicon) —
+          - platform: macos-latest
+            args: "--target universal-apple-darwin"
+
+          # — Windows: default target —
+          - platform: windows-latest
+            args: ""
+
+          # — Linux: default target —
+          - platform: ubuntu-22.04
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      # ---- Checkout the repo ----
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---- Set up Deno (your JS runtime) ----
+      # The frontend build uses Deno + Vite, so we need it on PATH.
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x
+
+      # ---- Install Linux system dependencies ----
+      # Tauri v2 on Linux requires webkit2gtk-4.1, GTK3, and a few
+      # other libraries that aren't pre-installed on GitHub runners.
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      # ---- Install Rust ----
+      # Explicit toolchain install (rather than relying on tauri-action
+      # to do it implicitly) so we can also enable Cargo caching below.
+      # macOS needs both Apple Silicon and Intel targets for the
+      # universal binary; other platforms just use their default target.
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      # ---- Cache Rust build artifacts ----
+      # Speeds up subsequent runs significantly by reusing the Cargo
+      # registry and target/ directory across workflow runs.
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # ---- Verify version consistency ----
+      # Make sure the version in tauri.conf.json matches the git tag.
+      # This prevents accidentally shipping a build with the wrong version.
+      - name: Verify version matches git tag
+        shell: bash
+        run: |
+          # Strip the leading "v" from the tag (v1.0.0 → 1.0.0)
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+
+          # Read the version field from tauri.conf.json using Node
+          # (Node is pre-installed on every GitHub Actions runner)
+          CONF_VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+
+          echo "Git tag version:   $TAG_VERSION"
+          echo "tauri.conf.json:   $CONF_VERSION"
+
+          if [ "$TAG_VERSION" != "$CONF_VERSION" ]; then
+            echo ""
+            echo "::error::Version mismatch! Tag says v${TAG_VERSION} but tauri.conf.json says ${CONF_VERSION}. Update tauri.conf.json before tagging."
+            exit 1
+          fi
+
+          echo "✓ Versions match — proceeding with build."
+
+      # ---- Build the Tauri app and upload artifacts to the release ----
+      # tauri-action normally assumes an npm/yarn/pnpm project. Since this
+      # project uses Deno, we point it at `deno task tauri` explicitly via
+      # tauriScript so it runs the right build command instead of guessing.
+      - name: Build and upload to release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: ${{ matrix.args }}
+          projectPath: .
+          tauriScript: deno task tauri
