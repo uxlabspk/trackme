@@ -1,9 +1,9 @@
 [package]
 name = "trackme"
-version = "0.1.0"
+version = "0.2.0"
 description = "A personal, local-first productivity desktop app"
-authors = ["you"]
-edition = "2021"
+authors = ["Muhammad Naveed <uxlabspk>"]
+edition = "2026"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
