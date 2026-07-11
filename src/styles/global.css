@@ -30,9 +30,15 @@
   --accent-info: #2c5f7c;
 
   /* Type */
-  --font-display: "Fraunces", "Iowan Old Style", serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /*--font-display: "Fraunces", "Iowan Old Style", serif;*/
+  /*--font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;*/
+  /*--font-mono: "IBM Plex Mono", ui-monospace, monospace;*/
+
+
+  --font-display: "Newsreader", "Fraunces", serif;
+  --font-body: "Inter", "Public Sans", sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", monospace;
+
 
   --radius-sm: 4px;
   --radius-md: 8px;
