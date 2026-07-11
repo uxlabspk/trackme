@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "npm:@milkdown/kit@^7.21.2": "7.21.2_typescript@5.6.3",
+    "npm:@milkdown/plugin-clipboard@^7.21.2": "7.21.2",
     "npm:@milkdown/plugin-emoji@^7.21.2": "7.21.2",
     "npm:@milkdown/plugin-prism@^7.20.0": "7.21.2",
     "npm:@milkdown/plugin-upload@^7.21.2": "7.21.2",
@@ -22,6 +23,7 @@
     "npm:prismjs@^1.29.0": "1.30.0",
     "npm:react-dom@^18.3.1": "18.3.1_react@18.3.1",
     "npm:react@^18.3.1": "18.3.1",
+    "npm:typescript@*": "5.6.3",
     "npm:typescript@5.6.3": "5.6.3",
     "npm:typescript@^5.6.3": "5.6.3",
     "npm:vite-plugin-node-polyfills@0.28": "0.28.0_vite@6.4.3",
@@ -3574,6 +3576,7 @@
     "packageJson": {
       "dependencies": [
         "npm:@milkdown/kit@^7.21.2",
+        "npm:@milkdown/plugin-clipboard@^7.21.2",
         "npm:@milkdown/plugin-emoji@^7.21.2",
         "npm:@milkdown/plugin-prism@^7.20.0",
         "npm:@milkdown/plugin-upload@^7.21.2",

@@ -7,6 +7,7 @@ import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
 import { history } from "@milkdown/kit/plugin/history";
 import { upload } from "@milkdown/kit/plugin/upload";
 import { remarkEmojiPlugin } from "@milkdown/plugin-emoji";
+import { clipboard } from "@milkdown/plugin-clipboard";
 import { Milkdown, useEditor } from "@milkdown/react";
 
 // Prism languages + theme are bundled by vite-plugin-prismjs (see
@@ -38,7 +39,8 @@ export default function MarkdownEditor({ value, onChange }: Props) {
       .use(history)
       .use(listener)
       .use(upload)
-      .use(remarkEmojiPlugin);
+      .use(remarkEmojiPlugin)
+      .use(clipboard);
   }, []);
 
   return (
