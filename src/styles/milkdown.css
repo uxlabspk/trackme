@@ -67,7 +67,7 @@
   line-height: 1.75;
   color: var(--ink);
   width: 100%;
-  max-width: 760px;
+
   caret-color: var(--moss);
   background: transparent;
 }
