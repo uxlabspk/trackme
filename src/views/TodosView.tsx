@@ -215,22 +215,25 @@ export default function TodosView({ vaultPath }: Props) {
                   {todo.relPath} · {remaining} remaining
                 </div>
               </div>
-              <button
-                onClick={handleDeleteList}
-                style={{ 
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  border: "none", 
-                  background: "none", 
-                  color: "var(--danger)", 
-                  fontSize: 13, 
-                  cursor: "pointer" 
-                }}
-              >
-                <Trash2 size={14} />
-                Delete list
-              </button>
+                <button
+                    onClick={handleDeleteList}
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        border: "none",
+                        background: "#ff3b30",
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        padding: "6px 12px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                    }}
+                >
+                    <Trash2 size={14} />
+                    Delete List
+                </button>
             </header>
 
             <div style={{ flex: 1, overflowY: "auto", padding: "18px 32px" }}>

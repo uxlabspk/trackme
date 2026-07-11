@@ -291,22 +291,25 @@ export default function NotesView({ vaultPath }: Props) {
                   {note.relPath} · {dirty ? "saving…" : "saved"}
                 </div>
               </div>
-              <button
-                onClick={handleDelete}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  border: "none",
-                  background: "none",
-                  color: "var(--danger)",
-                  fontSize: 13,
-                  cursor: "pointer",
-                }}
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
+                <button
+                    onClick={handleDelete}
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        border: "none",
+                        background: "#ff3b30",
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        padding: "6px 12px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                    }}
+                >
+                    <Trash2 size={14} />
+                    Delete
+                </button>
             </header>
 
             <div style={{ flex: 1, overflow: "hidden", padding: "0 28px" }}>

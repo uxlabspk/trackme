@@ -302,23 +302,25 @@ export default function ProjectsView({ vaultPath }: Props) {
                   }}
                 />
               </div>
-              <button
-                onClick={handleDeleteProject}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  border: "none",
-                  background: "none",
-                  color: "var(--danger)",
-                  fontSize: 13,
-                  cursor: "pointer",
-                  flexShrink: 0,
-                }}
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
+                <button
+                    onClick={handleDeleteProject}
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        border: "none",
+                        background: "#ff3b30",
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        padding: "6px 12px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                    }}
+                >
+                    <Trash2 size={14} />
+                    Delete Project
+                </button>
             </header>
 
             <div
