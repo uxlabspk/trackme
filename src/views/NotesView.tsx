@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import MarkdownEditor from "../components/MarkdownEditor";
 import Dialog from "../components/Dialog";
-import { createFolder, deleteFile, deleteFolder, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
+import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFolder, writeFile } from "../lib/bridge";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
 import { FolderPlus, Trash2 } from "lucide-react";
@@ -137,11 +137,11 @@ export default function NotesView({ vaultPath }: Props) {
   async function handleDeleteFolder(relPath: string) {
     if (
       !window.confirm(
-        `Delete folder "${relPath}" and all its notes? This can't be undone.`,
+        `Move folder "${relPath}" and all its notes to trash?`,
       )
     )
       return;
-    await deleteFolder(joinPath(vaultPath, relPath));
+    await trashFolder(vaultPath, relPath);
     if (currentFolder === relPath || currentFolder.startsWith(`${relPath}/`)) {
       setCurrentFolder("notes");
     }
@@ -153,9 +153,9 @@ export default function NotesView({ vaultPath }: Props) {
 
   async function handleDelete() {
     if (!note) return;
-    if (!window.confirm(`Delete "${note.frontmatter.title ?? note.relPath}"? This can't be undone.`))
+    if (!window.confirm(`Move "${note.frontmatter.title ?? note.relPath}" to trash?`))
       return;
-    await deleteFile(joinPath(vaultPath, note.relPath));
+    await trashFile(vaultPath, note.relPath);
     setSelected(null);
     await refreshTree();
   }

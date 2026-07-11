@@ -121,6 +121,10 @@ button {
   border-radius: var(--radius-sm);
 }
 
+.trash-row:hover {
+  background: var(--paper-raised);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

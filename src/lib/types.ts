@@ -95,3 +95,11 @@ export interface ProjectFile {
   frontmatter: ProjectFrontmatter;
   body: string; // freeform markdown notes, preserved on save
 }
+
+export interface TrashEntry {
+  trash_path: string;
+  original_path: string;
+  name: string;
+  is_dir: boolean;
+  deleted_at: string;
+}

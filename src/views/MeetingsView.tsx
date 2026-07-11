@@ -4,10 +4,10 @@ import RecurrenceEditor from "../components/RecurrenceEditor";
 import Dialog from "../components/Dialog";
 import {
   computeMeetingOccurrences,
-  deleteFile,
   joinPath,
   listVaultFolder,
   readFile,
+  trashFile,
   writeFile,
 } from "../lib/bridge";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
@@ -127,8 +127,8 @@ export default function MeetingsView({ vaultPath }: Props) {
 
   async function handleDelete() {
     if (!meeting) return;
-    if (!window.confirm(`Delete "${meeting.frontmatter.title ?? meeting.relPath}"?`)) return;
-    await deleteFile(joinPath(vaultPath, meeting.relPath));
+    if (!window.confirm(`Move "${meeting.frontmatter.title ?? meeting.relPath}" to trash?`)) return;
+    await trashFile(vaultPath, meeting.relPath);
     setSelected(null);
     await refreshTree();
   }

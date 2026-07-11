@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
-import { deleteFile, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
+import { joinPath, listVaultFolder, readFile, trashFile, writeFile } from "../lib/bridge";
 import {
   addTodoItem,
   editTodoItemText,
@@ -100,8 +100,8 @@ export default function TodosView({ vaultPath }: Props) {
 
   async function handleDeleteList() {
     if (!todo) return;
-    if (!window.confirm(`Delete "${todo.frontmatter.name ?? todo.relPath}"?`)) return;
-    await deleteFile(joinPath(vaultPath, todo.relPath));
+    if (!window.confirm(`Move "${todo.frontmatter.name ?? todo.relPath}" to trash?`)) return;
+    await trashFile(vaultPath, todo.relPath);
     setSelected(null);
     await refreshTree();
   }

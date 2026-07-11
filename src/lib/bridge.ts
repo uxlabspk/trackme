@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { Recurrence, VaultEntry } from "./types";
+import type { Recurrence, TrashEntry, VaultEntry } from "./types";
 
 export async function pickVaultFolder(): Promise<string | null> {
   const selected = await open({
@@ -54,6 +54,26 @@ export async function computeMeetingOccurrences(
     windowStart,
     windowEnd,
   });
+}
+
+export async function trashFile(vaultRoot: string, relPath: string): Promise<void> {
+  await invoke("trash_file", { vaultRoot, relPath });
+}
+
+export async function trashFolder(vaultRoot: string, relPath: string): Promise<void> {
+  await invoke("trash_folder", { vaultRoot, relPath });
+}
+
+export async function listTrash(vaultRoot: string): Promise<TrashEntry[]> {
+  return invoke("list_trash", { vaultRoot });
+}
+
+export async function restoreTrash(vaultRoot: string, trashPath: string): Promise<void> {
+  await invoke("restore_trash", { vaultRoot, trashPath });
+}
+
+export async function permanentDeleteTrash(vaultRoot: string, trashPath: string): Promise<void> {
+  await invoke("permanent_delete_trash", { vaultRoot, trashPath });
 }
 
 export function joinPath(root: string, ...parts: string[]): string {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
-import { deleteFile, joinPath, listVaultFolder, readFile, writeFile } from "../lib/bridge";
+import { joinPath, listVaultFolder, readFile, trashFile, writeFile } from "../lib/bridge";
 import {
   addColumn,
   addTask,
@@ -120,8 +120,8 @@ export default function ProjectsView({ vaultPath }: Props) {
 
   async function handleDeleteProject() {
     if (!project) return;
-    if (!window.confirm(`Delete project "${project.frontmatter.name ?? project.relPath}"?`)) return;
-    await deleteFile(joinPath(vaultPath, project.relPath));
+    if (!window.confirm(`Move project "${project.frontmatter.name ?? project.relPath}" to trash?`)) return;
+    await trashFile(vaultPath, project.relPath);
     setSelected(null);
     await refreshTree();
   }

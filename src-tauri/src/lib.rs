@@ -4,8 +4,42 @@ mod vault;
 use recurrence::{compute_occurrences, Recurrence};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use vault::VaultEntry;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct TrashEntry {
+    trash_path: String,
+    original_path: String,
+    name: String,
+    is_dir: bool,
+    deleted_at: String,
+}
+
+fn trash_metadata_path(vault_root: &str) -> PathBuf {
+    PathBuf::from(vault_root).join(".trackme").join("trash.json")
+}
+
+fn read_trash_metadata(vault_root: &str) -> Vec<TrashEntry> {
+    let p = trash_metadata_path(vault_root);
+    if !p.exists() {
+        return Vec::new();
+    }
+    fs::read_to_string(&p)
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+fn write_trash_metadata(vault_root: &str, entries: &[TrashEntry]) -> Result<(), String> {
+    let p = trash_metadata_path(vault_root);
+    let json = serde_json::to_string_pretty(entries).map_err(|e| e.to_string())?;
+    fs::write(&p, json).map_err(|e| e.to_string())
+}
+
+fn trash_dir(vault_root: &str) -> PathBuf {
+    PathBuf::from(vault_root).join(".trackme").join("trash")
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Occurrence {
@@ -68,6 +102,121 @@ fn rename_file(from: String, to: String) -> Result<(), String> {
     fs::rename(&from, &to).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn trash_file(vault_root: String, rel_path: String) -> Result<(), String> {
+    let source = PathBuf::from(&vault_root).join(&rel_path);
+    if !source.exists() {
+        return Err("file not found".into());
+    }
+
+    // Create trash directory
+    let tdir = trash_dir(&vault_root);
+    fs::create_dir_all(&tdir).map_err(|e| e.to_string())?;
+
+    // Generate unique trash name: replace slashes with double underscores
+    let safe_name = rel_path.replace('/', "__").replace('\\', "__");
+    let timestamp = chrono::Utc::now().format("%Y%m%d%H%M%S").to_string();
+    let trash_name = format!("{}_{}", timestamp, safe_name);
+    let dest = tdir.join(&trash_name);
+
+    fs::rename(&source, &dest).map_err(|e| e.to_string())?;
+
+    // Update metadata
+    let mut entries = read_trash_metadata(&vault_root);
+    entries.push(TrashEntry {
+        trash_path: trash_name,
+        original_path: rel_path.clone(),
+        name: Path::new(&rel_path)
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string(),
+        is_dir: false,
+        deleted_at: chrono::Utc::now().to_rfc3339(),
+    });
+    write_trash_metadata(&vault_root, &entries)
+}
+
+#[tauri::command]
+fn trash_folder(vault_root: String, rel_path: String) -> Result<(), String> {
+    let source = PathBuf::from(&vault_root).join(&rel_path);
+    if !source.exists() {
+        return Err("folder not found".into());
+    }
+    if rel_path.contains("..") {
+        return Err("invalid path".into());
+    }
+
+    let tdir = trash_dir(&vault_root);
+    fs::create_dir_all(&tdir).map_err(|e| e.to_string())?;
+
+    let safe_name = rel_path.replace('/', "__").replace('\\', "__");
+    let timestamp = chrono::Utc::now().format("%Y%m%d%H%M%S").to_string();
+    let trash_name = format!("{}_{}", timestamp, safe_name);
+    let dest = tdir.join(&trash_name);
+
+    fs::rename(&source, &dest).map_err(|e| e.to_string())?;
+
+    let mut entries = read_trash_metadata(&vault_root);
+    entries.push(TrashEntry {
+        trash_path: trash_name,
+        original_path: rel_path.clone(),
+        name: Path::new(&rel_path)
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string(),
+        is_dir: true,
+        deleted_at: chrono::Utc::now().to_rfc3339(),
+    });
+    write_trash_metadata(&vault_root, &entries)
+}
+
+#[tauri::command]
+fn list_trash(vault_root: String) -> Result<Vec<TrashEntry>, String> {
+    Ok(read_trash_metadata(&vault_root))
+}
+
+#[tauri::command]
+fn restore_trash(vault_root: String, trash_path: String) -> Result<(), String> {
+    let mut entries = read_trash_metadata(&vault_root);
+    let idx = entries.iter().position(|e| e.trash_path == trash_path);
+    let entry = idx
+        .map(|i| entries.remove(i))
+        .ok_or("trash entry not found")?;
+
+    let source = trash_dir(&vault_root).join(&trash_path);
+    if !source.exists() {
+        return Err("trashed file not found on disk".into());
+    }
+
+    let dest = PathBuf::from(&vault_root).join(&entry.original_path);
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    fs::rename(&source, &dest).map_err(|e| e.to_string())?;
+    write_trash_metadata(&vault_root, &entries)
+}
+
+#[tauri::command]
+fn permanent_delete_trash(vault_root: String, trash_path: String) -> Result<(), String> {
+    let mut entries = read_trash_metadata(&vault_root);
+    let idx = entries.iter().position(|e| e.trash_path == trash_path);
+    let entry = idx
+        .map(|i| entries.remove(i))
+        .ok_or("trash entry not found")?;
+
+    let source = trash_dir(&vault_root).join(&trash_path);
+    if entry.is_dir {
+        fs::remove_dir_all(&source).map_err(|e| e.to_string())?;
+    } else {
+        fs::remove_file(&source).map_err(|e| e.to_string())?;
+    }
+
+    write_trash_metadata(&vault_root, &entries)
+}
+
 /// Computes concrete calendar occurrences for a single recurrence rule,
 /// between window_start and window_end (both YYYY-MM-DD).
 #[tauri::command]
@@ -100,6 +249,11 @@ pub fn run() {
             delete_folder,
             rename_file,
             compute_meeting_occurrences,
+            trash_file,
+            trash_folder,
+            list_trash,
+            restore_trash,
+            permanent_delete_trash,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

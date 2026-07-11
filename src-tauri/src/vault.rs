@@ -16,7 +16,7 @@ pub struct VaultEntry {
 pub fn bootstrap_vault(root: &str) -> anyhow::Result<()> {
     let root = Path::new(root);
     fs::create_dir_all(root)?;
-    for sub in ["notes", "meetings", "todos", "projects", ".trackme"] {
+    for sub in ["notes", "meetings", "todos", "projects", ".trackme", ".trackme/trash"] {
         fs::create_dir_all(root.join(sub))?;
     }
 
