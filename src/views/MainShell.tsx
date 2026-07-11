@@ -92,12 +92,12 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
                 padding: "9px 10px",
                 borderRadius: "var(--radius-md)",
                 border: "none",
-                background: tab === t.id ? "var(--paper-raised)" : "transparent",
+                background: tab === t.id ? "#b0603f" : "transparent",
                 boxShadow: tab === t.id ? "var(--shadow-sm)" : "none",
                 cursor: "pointer",
                 fontSize: 14,
                 fontWeight: tab === t.id ? 600 : 500,
-                color: "var(--ink)",
+                color: tab === t.id ? "#ffffff" : "var(--ink)",
                 transition: "background 0.15s ease",
               }}
               onMouseEnter={(e) => {
@@ -111,7 +111,7 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
                 }
               }}
             >
-              {t.icon}
+              <span>{t.icon}</span>
               {t.label}
             </button>
           ))}
