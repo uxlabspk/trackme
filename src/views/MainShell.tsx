@@ -111,7 +111,7 @@ export default function MainShell({ vaultPath, onSwitchVault }: Props) {
                 }
               }}
             >
-              <span>{t.icon}</span>
+              {t.icon}
               {t.label}
             </button>
           ))}
