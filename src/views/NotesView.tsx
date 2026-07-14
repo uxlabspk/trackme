@@ -170,6 +170,22 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
     await refreshTree();
   }
 
+  const kbdStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 24,
+    height: 22,
+    fontFamily: "var(--font-mono)",
+    fontSize: 11,
+    color: "var(--ink-soft)",
+    background: "var(--paper-raised)",
+    border: "1px solid var(--hairline-strong)",
+    borderRadius: 4,
+    padding: "0 6px",
+    lineHeight: 1,
+  };
+
   return (
     <div style={{ display: "flex", height: "100%" }}>
       <aside
@@ -247,13 +263,41 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
             style={{
               flex: 1,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--ink-soft)",
-              fontSize: 14,
+              gap: 24,
             }}
           >
-            Select a note, or create one to get started.
+            <div style={{ fontSize: 14, color: "var(--ink-soft)" }}>
+              Select a note, or create one to get started.
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  fontSize: 13,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                <kbd style={kbdStyle}>⌘K</kbd>
+                <span>Search across all notes</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  fontSize: 13,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                <kbd style={kbdStyle}>+</kbd>
+                <span>Create a new note</span>
+              </div>
+            </div>
           </div>
         ) : (
           <>
