@@ -22,6 +22,8 @@ import { GripVertical, Plus, Trash2, X } from "lucide-react";
 
 interface Props {
   vaultPath: string;
+  searchTarget?: string | null;
+  onSearchHandled?: () => void;
 }
 
 function slugify(name: string): string {
@@ -38,7 +40,7 @@ function flatten(entries: VaultEntry[]): VaultEntry[] {
   return entries.flatMap((e) => (e.is_dir ? flatten(e.children) : [e]));
 }
 
-export default function ProjectsView({ vaultPath }: Props) {
+export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [project, setProject] = useState<ProjectFile | null>(null);
@@ -66,6 +68,13 @@ export default function ProjectsView({ vaultPath }: Props) {
   useEffect(() => {
     refreshTree();
   }, [refreshTree]);
+
+  useEffect(() => {
+    if (searchTarget) {
+      setSelected(searchTarget);
+      onSearchHandled?.();
+    }
+  }, [searchTarget, onSearchHandled]);
 
   useEffect(() => {
     if (!selected) {

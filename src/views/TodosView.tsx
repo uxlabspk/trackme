@@ -16,6 +16,8 @@ import { Trash2 } from "lucide-react";
 
 interface Props {
   vaultPath: string;
+  searchTarget?: string | null;
+  onSearchHandled?: () => void;
 }
 
 function slugify(name: string): string {
@@ -28,7 +30,7 @@ function slugify(name: string): string {
   );
 }
 
-export default function TodosView({ vaultPath }: Props) {
+export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [todo, setTodo] = useState<TodoFile | null>(null);
@@ -43,6 +45,13 @@ export default function TodosView({ vaultPath }: Props) {
   useEffect(() => {
     refreshTree();
   }, [refreshTree]);
+
+  useEffect(() => {
+    if (searchTarget) {
+      setSelected(searchTarget);
+      onSearchHandled?.();
+    }
+  }, [searchTarget, onSearchHandled]);
 
   useEffect(() => {
     if (!selected) {

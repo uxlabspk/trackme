@@ -18,6 +18,8 @@ import { Trash2 } from "lucide-react";
 
 interface Props {
   vaultPath: string;
+  searchTarget?: string | null;
+  onSearchHandled?: () => void;
 }
 
 function slugify(title: string): string {
@@ -40,7 +42,7 @@ function defaultRecurrence(): Recurrence {
   };
 }
 
-export default function MeetingsView({ vaultPath }: Props) {
+export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [meeting, setMeeting] = useState<MeetingFile | null>(null);
@@ -56,6 +58,13 @@ export default function MeetingsView({ vaultPath }: Props) {
   useEffect(() => {
     refreshTree();
   }, [refreshTree]);
+
+  useEffect(() => {
+    if (searchTarget) {
+      setSelected(searchTarget);
+      onSearchHandled?.();
+    }
+  }, [searchTarget, onSearchHandled]);
 
   useEffect(() => {
     if (!selected) {
