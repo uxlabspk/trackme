@@ -1,10 +1,15 @@
+mod notifications;
 mod recurrence;
 mod vault;
 
+use notifications::{start_scheduler, NotificationState};
 use recurrence::{compute_occurrences, Recurrence};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+use tauri::menu::{MenuBuilder, MenuItemBuilder};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::Manager;
 use vault::VaultEntry;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -43,7 +48,7 @@ fn trash_dir(vault_root: &str) -> PathBuf {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Occurrence {
-    pub date: String, // YYYY-MM-DD
+    pub date: String,
     pub file_rel_path: String,
     pub title: String,
     pub time: Option<String>,
@@ -114,11 +119,9 @@ fn trash_file(vault_root: String, rel_path: String) -> Result<(), String> {
         return Err("file not found".into());
     }
 
-    // Create trash directory
     let tdir = trash_dir(&vault_root);
     fs::create_dir_all(&tdir).map_err(|e| e.to_string())?;
 
-    // Generate unique trash name: replace slashes with double underscores
     let safe_name = rel_path.replace('/', "__").replace('\\', "__");
     let timestamp = chrono::Utc::now().format("%Y%m%d%H%M%S").to_string();
     let trash_name = format!("{}_{}", timestamp, safe_name);
@@ -126,7 +129,6 @@ fn trash_file(vault_root: String, rel_path: String) -> Result<(), String> {
 
     fs::rename(&source, &dest).map_err(|e| e.to_string())?;
 
-    // Update metadata
     let mut entries = read_trash_metadata(&vault_root);
     entries.push(TrashEntry {
         trash_path: trash_name,
@@ -222,8 +224,6 @@ fn permanent_delete_trash(vault_root: String, trash_path: String) -> Result<(), 
     write_trash_metadata(&vault_root, &entries)
 }
 
-/// Computes concrete calendar occurrences for a single recurrence rule,
-/// between window_start and window_end (both YYYY-MM-DD).
 #[tauri::command]
 fn compute_meeting_occurrences(
     rule_json: String,
@@ -239,11 +239,18 @@ fn compute_meeting_occurrences(
     Ok(occ.iter().map(|d| d.format("%Y-%m-%d").to_string()).collect())
 }
 
+#[tauri::command]
+fn set_vault_path(state: tauri::State<NotificationState>, path: String) {
+    *state.vault_path.lock().unwrap() = path;
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_notification::init())
+        .manage(NotificationState::default())
         .invoke_handler(tauri::generate_handler![
             bootstrap_vault,
             list_vault_folder,
@@ -260,7 +267,65 @@ pub fn run() {
             list_trash,
             restore_trash,
             permanent_delete_trash,
+            set_vault_path,
         ])
+        .setup(|app| {
+            let show_item =
+                MenuItemBuilder::with_id("show", "Show TrackMe").build(app)?;
+            let quit_item =
+                MenuItemBuilder::with_id("quit", "Quit").build(app)?;
+            let menu = MenuBuilder::new(app)
+                .item(&show_item)
+                .item(&quit_item)
+                .build()?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("TrackMe")
+                .menu(&menu)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            if let Some(window) = app.get_webview_window("main") {
+                let window_clone = window.clone();
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = window_clone.hide();
+                    }
+                });
+            }
+
+            let state = app.state::<NotificationState>();
+            start_scheduler(app.handle().clone(), state.inner().clone());
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -84,3 +84,7 @@ export function joinPath(root: string, ...parts: string[]): string {
   const sep = root.includes("\\") && !root.includes("/") ? "\\" : "/";
   return [root.replace(/[/\\]+$/, ""), ...parts].join(sep);
 }
+
+export async function setVaultPath(path: string): Promise<void> {
+  await invoke("set_vault_path", { path });
+}

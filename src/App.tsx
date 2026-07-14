@@ -3,22 +3,39 @@ import Welcome from "./views/Welcome";
 import VaultPicker from "./views/VaultPicker";
 import MainShell from "./views/MainShell";
 import { getLastVaultPath } from "./lib/appConfig";
-import { bootstrapVault } from "./lib/bridge";
+import { bootstrapVault, setVaultPath } from "./lib/bridge";
 import { ThemeProvider } from "./lib/ThemeContext";
 
 type Screen = "loading" | "welcome" | "vault-picker" | "main";
 
+async function initNotifications(vaultPath: string) {
+  try {
+    const { isPermissionGranted, requestPermission } = await import("@tauri-apps/plugin-notification");
+    let granted = await isPermissionGranted();
+    if (!granted) {
+      const result = await requestPermission();
+      granted = result === "granted";
+    }
+    if (granted) {
+      await setVaultPath(vaultPath);
+    }
+  } catch {
+    // Notification plugin not available, skip
+  }
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("loading");
-  const [vaultPath, setVaultPath] = useState<string | null>(null);
+  const [vaultPath, setVaultPathState] = useState<string | null>(null);
 
   useEffect(() => {
     const last = getLastVaultPath();
     if (last) {
       bootstrapVault(last)
         .then(() => {
-          setVaultPath(last);
+          setVaultPathState(last);
           setScreen("main");
+          initNotifications(last);
         })
         .catch(() => setScreen("welcome"));
     } else {
@@ -36,8 +53,9 @@ export default function App() {
       {screen === "vault-picker" && (
         <VaultPicker
           onVaultReady={(path) => {
-            setVaultPath(path);
+            setVaultPathState(path);
             setScreen("main");
+            initNotifications(path);
           }}
         />
       )}
