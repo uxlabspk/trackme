@@ -10,6 +10,7 @@ import {
   trashFile,
   writeFile,
 } from "../lib/bridge";
+import { uniquePath } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { MeetingFile, MeetingFrontmatter, Recurrence, VaultEntry } from "../lib/types";
 import { format, addDays } from "date-fns";
@@ -100,7 +101,7 @@ export default function MeetingsView({ vaultPath }: Props) {
   }
 
   async function createMeeting(title: string) {
-    const relPath = `meetings/${slugify(title)}.md`;
+    const relPath = await uniquePath(vaultPath, `meetings/${slugify(title)}.md`);
     const frontmatter: MeetingFrontmatter = {
       title,
       time: "09:30",

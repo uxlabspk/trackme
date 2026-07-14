@@ -66,6 +66,11 @@ fn read_file(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn file_exists(path: String) -> Result<bool, String> {
+    Ok(Path::new(&path).exists())
+}
+
+#[tauri::command]
 fn write_file(path: String, contents: String) -> Result<(), String> {
     if let Some(parent) = Path::new(&path).parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -243,6 +248,7 @@ pub fn run() {
             bootstrap_vault,
             list_vault_folder,
             read_file,
+            file_exists,
             write_file,
             delete_file,
             create_folder,

@@ -24,6 +24,10 @@ export async function readFile(path: string): Promise<string> {
   return invoke("read_file", { path });
 }
 
+export async function fileExists(path: string): Promise<boolean> {
+  return invoke("file_exists", { path });
+}
+
 export async function writeFile(path: string, contents: string): Promise<void> {
   await invoke("write_file", { path, contents });
 }

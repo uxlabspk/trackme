@@ -3,6 +3,7 @@ import FileTreeList from "../components/FileTreeList";
 import MarkdownEditor from "../components/MarkdownEditor";
 import Dialog from "../components/Dialog";
 import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFolder, writeFile } from "../lib/bridge";
+import { uniquePath } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
 import { FolderPlus, Trash2 } from "lucide-react";
@@ -96,7 +97,7 @@ export default function NotesView({ vaultPath }: Props) {
   );
 
   async function createNote(title: string, folder: string) {
-    const relPath = `${folder.replace(/\/+$/, "")}/${slugify(title)}.md`;
+    const relPath = await uniquePath(vaultPath, `${folder.replace(/\/+$/, "")}/${slugify(title)}.md`);
     const now = new Date().toISOString();
     const raw = serializeFrontmatter(
       { title, createdAt: now, updatedAt: now, tags: [] },

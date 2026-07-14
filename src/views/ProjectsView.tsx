@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
 import { joinPath, listVaultFolder, readFile, trashFile, writeFile } from "../lib/bridge";
+import { uniquePath } from "../lib/path";
 import {
   addColumn,
   addTask,
@@ -95,7 +96,7 @@ export default function ProjectsView({ vaultPath }: Props) {
   }
 
   async function createProject(name: string) {
-    const relPath = `projects/${slugify(name)}.md`;
+    const relPath = await uniquePath(vaultPath, `projects/${slugify(name)}.md`);
     const raw = serializeProjectFile({
       relPath,
       frontmatter: { name, columns: [...DEFAULT_COLUMNS], tasks: [] },

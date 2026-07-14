@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
 import { joinPath, listVaultFolder, readFile, trashFile, writeFile } from "../lib/bridge";
+import { uniquePath } from "../lib/path";
 import {
   addTodoItem,
   editTodoItemText,
@@ -75,7 +76,7 @@ export default function TodosView({ vaultPath }: Props) {
   }
 
   async function createList(name: string) {
-    const relPath = `todos/${slugify(name)}.md`;
+    const relPath = await uniquePath(vaultPath, `todos/${slugify(name)}.md`);
     const raw = serializeTodoFileFresh(name);
     await writeFile(joinPath(vaultPath, relPath), raw);
     await refreshTree();
