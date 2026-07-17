@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Welcome from "./views/Welcome";
 import VaultPicker from "./views/VaultPicker";
 import MainShell from "./views/MainShell";
-import { getLastVaultPath } from "./lib/appConfig";
+import { getLastVaultPath, migrateVaultConfig, getLastActiveVault, setLastActiveVault } from "./lib/appConfig";
 import { bootstrapVault, setVaultPath } from "./lib/bridge";
 import { ThemeProvider } from "./lib/ThemeContext";
 
@@ -29,19 +29,39 @@ export default function App() {
   const [vaultPath, setVaultPathState] = useState<string | null>(null);
 
   useEffect(() => {
-    const last = getLastVaultPath();
-    if (last) {
-      bootstrapVault(last)
+    migrateVaultConfig();
+
+    const active = getLastActiveVault();
+    if (active) {
+      bootstrapVault(active)
         .then(() => {
-          setVaultPathState(last);
+          setVaultPathState(active);
           setScreen("main");
-          initNotifications(last);
+          initNotifications(active);
         })
         .catch(() => setScreen("welcome"));
     } else {
-      setScreen("welcome");
+      const legacy = getLastVaultPath();
+      if (legacy) {
+        bootstrapVault(legacy)
+          .then(() => {
+            setLastActiveVault(legacy);
+            setVaultPathState(legacy);
+            setScreen("main");
+            initNotifications(legacy);
+          })
+          .catch(() => setScreen("welcome"));
+      } else {
+        setScreen("welcome");
+      }
     }
   }, []);
+
+  function handleVaultSwitch(path: string) {
+    setVaultPathState(path);
+    setScreen("main");
+    initNotifications(path);
+  }
 
   if (screen === "loading") {
     return <div style={{ height: "100%", background: "var(--paper)" }} />;
@@ -53,6 +73,7 @@ export default function App() {
       {screen === "vault-picker" && (
         <VaultPicker
           onVaultReady={(path) => {
+            setLastActiveVault(path);
             setVaultPathState(path);
             setScreen("main");
             initNotifications(path);
@@ -62,7 +83,7 @@ export default function App() {
       {screen === "main" && vaultPath && (
         <MainShell
           vaultPath={vaultPath}
-          onSwitchVault={() => setScreen("vault-picker")}
+          onVaultSwitch={handleVaultSwitch}
         />
       )}
     </ThemeProvider>

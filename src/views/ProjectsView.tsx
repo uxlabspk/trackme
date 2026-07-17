@@ -70,6 +70,13 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
   }, [refreshTree]);
 
   useEffect(() => {
+    setSelected(null);
+    setProject(null);
+    setEditing(null);
+    setDraftTask("");
+  }, [vaultPath]);
+
+  useEffect(() => {
     if (searchTarget) {
       setSelected(searchTarget);
       onSearchHandled?.();

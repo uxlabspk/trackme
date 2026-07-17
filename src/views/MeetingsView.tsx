@@ -60,6 +60,12 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
   }, [refreshTree]);
 
   useEffect(() => {
+    setSelected(null);
+    setMeeting(null);
+    setOccurrences([]);
+  }, [vaultPath]);
+
+  useEffect(() => {
     if (searchTarget) {
       setSelected(searchTarget);
       onSearchHandled?.();

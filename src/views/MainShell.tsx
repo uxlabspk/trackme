@@ -7,13 +7,14 @@ import AgendaView from "./AgendaView";
 import ProjectsView from "./ProjectsView";
 import TrashView from "./TrashView";
 import SearchModal from "../components/SearchModal";
+import VaultSwitcher from "../components/VaultSwitcher";
 import {useTheme} from "../lib/ThemeContext";
 
 type Tab = "agenda" | "notes" | "meetings" | "todos" | "projects" | "trash";
 
 interface Props {
     vaultPath: string;
-    onSwitchVault: () => void;
+    onVaultSwitch: (path: string) => void;
 }
 
 const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] = [
@@ -49,10 +50,11 @@ const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] 
     }
 ];
 
-export default function MainShell({vaultPath, onSwitchVault}: Props) {
+export default function MainShell({vaultPath, onVaultSwitch}: Props) {
     const [tab, setTab] = useState<Tab>("agenda");
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchTarget, setSearchTarget] = useState<{ tab: Tab; relPath: string } | null>(null);
+    const [vaultSwitcherOpen, setVaultSwitcherOpen] = useState(false);
     const {theme, toggleTheme} = useTheme();
     const vaultName = vaultPath.split(/[/\\]/).filter(Boolean).pop() ?? "Vault";
 
@@ -229,7 +231,7 @@ export default function MainShell({vaultPath, onSwitchVault}: Props) {
                         {theme === "light" ? <><Moon size={14}/>Lights Off</> : <><Sun size={14}/>Lights On</>}
                     </button>
                     <button
-                        onClick={onSwitchVault}
+                        onClick={() => setVaultSwitcherOpen(true)}
                         style={{
                             display: "flex",
                             alignItems: "center",
@@ -273,6 +275,13 @@ export default function MainShell({vaultPath, onSwitchVault}: Props) {
                 onClose={() => setSearchOpen(false)}
                 vaultPath={vaultPath}
                 onNavigate={handleSearchNavigate}
+            />
+
+            <VaultSwitcher
+                open={vaultSwitcherOpen}
+                currentVault={vaultPath}
+                onClose={() => setVaultSwitcherOpen(false)}
+                onVaultSwitch={onVaultSwitch}
             />
         </div>
     );

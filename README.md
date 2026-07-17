@@ -33,7 +33,8 @@ deno task tauri dev # hot-reloads the frontend and opens a native window
 
 First launch shows the **Welcome** screen → **Get Started** → pick or create
 a vault folder. TrackMe creates `notes/`, `meetings/`, `todos/`, and
-`.trackme/` inside it if they don't exist yet.
+`.trackme/` inside it if they don't exist yet. You can add and switch between
+multiple vaults from the sidebar using the "Switch vault" button.
 
 ## Building a distributable app
 
@@ -50,9 +51,11 @@ macOS, `.msi`/`.exe` on Windows, `.deb`/`.AppImage` on Linux).
 trackme/
   src/                    # React frontend
     views/                # Welcome, VaultPicker, MainShell, NotesView,
-                           # MeetingsView, TodosView, AgendaView
+                           # MeetingsView, TodosView, AgendaView,
+                           # ProjectsView, TrashView
     components/           # FileTreeList, MarkdownEditor (Milkdown),
-                           # RecurrenceEditor
+                           # RecurrenceEditor, VaultSwitcher, SearchModal,
+                           # Dialog
     lib/                  # bridge.ts (Tauri invoke wrappers), types.ts,
                            # frontmatter.ts, todos.ts, appConfig.ts
   src-tauri/              # Rust backend
@@ -70,6 +73,7 @@ trackme/
 
 - [x] Welcome screen
 - [x] Vault picker + folder bootstrap (`notes/`, `meetings/`, `todos/`, `.trackme/`)
+- [x] Multi-vault support — add, switch, and remove vaults from the sidebar modal; last-used vault is remembered across sessions
 - [x] Main app shell/navigation (sidebar: Today / Notes / Meetings / Todos)
 - [x] Notes: create/edit/delete, WYSIWYG markdown editing (Milkdown),
       syntax-highlighted fenced code blocks (Shiki), YAML frontmatter
@@ -102,7 +106,5 @@ trackme/
 
 ## Known gaps / next steps
 
-- No search across notes yet.
-- No multi-vault switching UI beyond "switch vault" (which re-runs the picker).
 - No tags/backlinks between notes.
 - No OS-level notifications for upcoming meetings (agenda view is pull-based).

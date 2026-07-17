@@ -47,6 +47,12 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
   }, [refreshTree]);
 
   useEffect(() => {
+    setSelected(null);
+    setTodo(null);
+    setNewItemText("");
+  }, [vaultPath]);
+
+  useEffect(() => {
     if (searchTarget) {
       setSelected(searchTarget);
       onSearchHandled?.();

@@ -65,6 +65,12 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
   }, [refreshTree]);
 
   useEffect(() => {
+    setSelected(null);
+    setNote(null);
+    setCurrentFolder("notes");
+  }, [vaultPath]);
+
+  useEffect(() => {
     if (searchTarget) {
       setSelected(searchTarget);
       onSearchHandled?.();
