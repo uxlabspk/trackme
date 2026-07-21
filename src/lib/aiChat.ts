@@ -1,5 +1,5 @@
 import type { AiConfig, AiToolCall, AiToolDefinition, NoteFrontmatter, MeetingFrontmatter, ProjectFrontmatter, Recurrence } from "./types";
-import { readFile, writeFile, deleteFile, joinPath, listVaultFolder } from "./bridge";
+import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolder } from "./bridge";
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter";
 import { parseTodoFile, serializeTodoFile, addTodoItem, toggleTodoItem, removeTodoItem } from "./todos";
 import { parseProjectFile, serializeProjectFile, addTask, moveTask, removeTask } from "./projects";
@@ -23,13 +23,13 @@ export const VAULT_TOOLS: AiToolDefinition[] = [
   },
   {
     name: "create_note",
-    description: "Create a new note with a title and optional body content.",
+    description: "Create a new note with a title and optional body content. The folder parameter supports nested paths (e.g. 'notes/projects/ideas') — parent folders are created automatically.",
     parameters: {
       type: "object",
       properties: {
         title: { type: "string", description: "Title of the note" },
         body: { type: "string", description: "Markdown body content" },
-        folder: { type: "string", description: "Subfolder within notes/ (default: notes)" },
+        folder: { type: "string", description: "Subfolder path within notes/ (e.g. 'notes/daily' or 'notes/projects/ideas'). Parent folders are created automatically. Default: notes" },
       },
       required: ["title"],
     },
@@ -257,6 +257,17 @@ export const VAULT_TOOLS: AiToolDefinition[] = [
     parameters: {
       type: "object",
       properties: { path: { type: "string", description: "Relative path of the project file" } },
+      required: ["path"],
+    },
+  },
+  {
+    name: "create_folder",
+    description: "Create a folder (directory) in the vault. Useful for organizing notes into subfolders.",
+    parameters: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Relative path of the folder to create (e.g. 'notes/projects' or 'notes/daily/journal')" },
+      },
       required: ["path"],
     },
   },
@@ -627,6 +638,12 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
       return `Deleted project at ${args.path}`;
     }
 
+    case "create_folder": {
+      const folderPath = joinPath(vaultPath, args.path as string);
+      await createFolder(folderPath);
+      return `Created folder at ${args.path}`;
+    }
+
     default:
       return `Unknown tool: ${name}`;
   }
@@ -818,23 +835,48 @@ async function sendAnthropicRequest(
 }
 
 export function getSystemPrompt(vaultContext: string): string {
-  return `You are an AI assistant for TrackMe, a personal productivity app. You have access to the user's vault of notes, meetings, todos, and projects.
+  return `You are a friendly, capable AI assistant built into TrackMe, a personal productivity app. You are both a conversational assistant AND a vault manager. Talk naturally with the user — you can answer questions, have conversations, help with writing, brainstorm ideas, explain concepts, and more. You are NOT limited to just vault operations.
 
 CURRENT VAULT CONTENTS:
 ${vaultContext}
 
-CAPABILITIES:
-You can read, create, update, and delete items in the vault. Use the available tools to perform CRUD operations. When the user asks you to do something with their vault items, use the appropriate tools.
+## TWO MODES OF OPERATION:
 
-GUIDELINES:
-- When creating items, use clear, descriptive names
+### 1. CONVERSATIONAL MODE (no tools needed)
+For general conversation, writing, brainstorming, questions, advice, explanations, stories, drafts, summaries, translations, code help, or ANY topic — just respond directly as a helpful assistant. Examples:
+- "Draft a story about a dragon" → Write the story directly in your response
+- "What is machine learning?" → Explain it conversationally
+- "Help me brainstorm project ideas" → List and discuss ideas
+- "Summarize this text for me" → Summarize it
+- "Write me a poem" → Write the poem
+
+### 2. VAULT ASSISTANT MODE (use tools)
+When the user asks about their notes, meetings, todos, or projects, use the available tools. You can:
+- List, read, create, update, delete notes (with nested folder support)
+- List, read, create, update, delete meetings (with recurrence support)
+- List, read, create, toggle, delete todo items
+- List, read, create, add tasks to, move tasks in, delete projects
+- Create folders to organize items into subcategories
+
+## HANDLING CREATION REQUESTS:
+When the user asks you to create, draft, or write something (like a story, essay, plan, letter, etc.), you have two options:
+1. **Just respond with the content** — if they just want to see it in chat
+2. **Save it as a note** — if they say "save it", "create a note", "put it in my vault", or similar
+
+If the user says "draft a story" or "write me a letter", write the content directly. If they then say "save that as a note", use the create_note tool.
+
+## GUIDELINES:
+- Be warm, helpful, and conversational
+- When creating vault items, use clear, descriptive names
+- When the user asks to save something in a specific folder, use the folder parameter in create_note (e.g. folder="notes/projects") — nested folders like "notes/projects/ideas" are supported and created automatically
+- If the user wants a completely new folder outside of notes/meetings/todos/projects, use the create_folder tool first
 - When listing items, summarize concisely
 - When the user asks to modify something, confirm what you'll do before making changes
 - If an item path is ambiguous, list items first to find the correct one
 - Dates should be in ISO format (YYYY-MM-DDTHH:MM:SS)
 - For todo items, use the checkbox syntax: "- [ ] task" for open, "- [x] task" for done
 
-RECURRENCE RULES (for meetings):
+## RECURRENCE RULES (for meetings):
 When a user asks for a recurring meeting, you MUST set the recurrence parameter as a JSON string with this exact schema:
 {"freq":"daily"|"weekly"|"monthly"|"once","days":["mon","tue","wed","thu","fri","sat","sun"],"interval":1,"start_date":null,"end_date":null}
 
@@ -853,7 +895,7 @@ EXAMPLES:
 
 IMPORTANT: Do NOT use freq="weekly" for daily patterns. If the user says "every day" or "daily", use freq="daily". freq="weekly" means once per week.
 
-Be helpful, concise, and proactive about organizing the user's data.`;
+Remember: You are a helpful assistant first, vault manager second. Always prioritize being useful and conversational.`;
 }
 
 /* ── Streaming API Client ── */
@@ -897,9 +939,10 @@ export async function sendChatMessageStream(
   tools: AiToolDefinition[],
   vaultPath: string,
   callbacks: StreamCallbacks,
+  signal?: AbortSignal,
 ): Promise<void> {
   if (config.provider === "anthropic") {
-    return sendAnthropicStream(config, messages, tools, vaultPath, callbacks);
+    return sendAnthropicStream(config, messages, tools, vaultPath, callbacks, signal);
   }
 
   const endpoint = getEndpointStreaming(config);
@@ -920,8 +963,10 @@ export async function sendChatMessageStream(
       method: "POST",
       headers,
       body: JSON.stringify(body),
+      signal,
     });
   } catch (err) {
+    if (signal?.aborted) return;
     callbacks.onError(err instanceof Error ? err : new Error(String(err)));
     return;
   }
@@ -945,6 +990,7 @@ export async function sendChatMessageStream(
 
   try {
     while (true) {
+      if (signal?.aborted) break;
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -1057,6 +1103,7 @@ async function sendAnthropicStream(
   tools: AiToolDefinition[],
   vaultPath: string,
   callbacks: StreamCallbacks,
+  signal?: AbortSignal,
 ): Promise<void> {
   const endpoint = getEndpointStreaming(config);
   const headers = buildHeaders(config);
@@ -1076,8 +1123,9 @@ async function sendAnthropicStream(
 
   let resp: Response;
   try {
-    resp = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body) });
+    resp = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body), signal });
   } catch (err) {
+    if (signal?.aborted) return;
     callbacks.onError(err instanceof Error ? err : new Error(String(err)));
     return;
   }
@@ -1102,6 +1150,7 @@ async function sendAnthropicStream(
 
   try {
     while (true) {
+      if (signal?.aborted) break;
       const { done, value } = await reader.read();
       if (done) break;
 

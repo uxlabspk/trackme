@@ -8,7 +8,9 @@
   "imports": {
     "react": "npm:react@^18.3.1",
     "react-dom": "npm:react-dom@^18.3.1",
-    "react-dom/client": "npm:react-dom@^18.3.1/client"
+    "react-dom/client": "npm:react-dom@^18.3.1/client",
+    "react-markdown": "npm:react-markdown@^10.1.0",
+    "remark-gfm": "npm:remark-gfm@^4.0.1"
   },
   "tasks": {
     "dev": "deno run -A npm:vite",

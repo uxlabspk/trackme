@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare } from "lucide-react";
+import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { AiConfig, AiMessage, AiSession, AiToolCall } from "../lib/types";
 import { loadAiConfig, saveAiConfig, isAiConfigured } from "../lib/aiConfig";
 import { sendChatMessageStream, buildVaultContext, getSystemPrompt, VAULT_TOOLS, type StreamCallbacks } from "../lib/aiChat";
@@ -28,6 +30,7 @@ export default function AiChatView({ vaultPath }: Props) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<number | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Load session list
   const refreshSessions = useCallback(async () => {
@@ -154,8 +157,14 @@ export default function AiChatView({ vaultPath }: Props) {
     setStreamingContent("");
     setStreamingToolCalls([]);
 
+    const abortCtrl = new AbortController();
+    abortRef.current = abortCtrl;
+
     // Persist after user message
     persistSession(sessionId, nextMessages);
+
+    let finalContent = "";
+    let finalToolCalls: AiToolCall[] = [];
 
     try {
       const ctx = vaultContext || await buildVaultContext(vaultPath);
@@ -166,9 +175,6 @@ export default function AiChatView({ vaultPath }: Props) {
         ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
         { role: "user" as const, content: text },
       ];
-
-      let finalContent = "";
-      let finalToolCalls: AiToolCall[] = [];
 
       const callbacks: StreamCallbacks = {
         onToken: (token) => {
@@ -206,7 +212,7 @@ export default function AiChatView({ vaultPath }: Props) {
         },
       };
 
-      await sendChatMessageStream(config, apiMessages, VAULT_TOOLS, vaultPath, callbacks);
+      await sendChatMessageStream(config, apiMessages, VAULT_TOOLS, vaultPath, callbacks, abortCtrl.signal);
 
       // Finalize the message
       const assistantMsg: AiMessage = {
@@ -227,19 +233,36 @@ export default function AiChatView({ vaultPath }: Props) {
         refreshContext();
       }
     } catch (err) {
-      const errMsg: AiMessage = {
-        id: genId(),
-        role: "system",
-        content: `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
-        timestamp: Date.now(),
-      };
-      const finalMessages = [...nextMessages, errMsg];
-      setMessages(finalMessages);
-      persistSession(sessionId, finalMessages);
+      if (abortCtrl.signal.aborted) {
+        // User stopped — save whatever was generated
+        if (finalContent) {
+          const assistantMsg: AiMessage = {
+            id: genId(),
+            role: "assistant",
+            content: finalContent,
+            toolCalls: finalToolCalls.length > 0 ? finalToolCalls : undefined,
+            timestamp: Date.now(),
+          };
+          const finalMessages = [...nextMessages, assistantMsg];
+          setMessages(finalMessages);
+          persistSession(sessionId!, finalMessages);
+        }
+      } else {
+        const errMsg: AiMessage = {
+          id: genId(),
+          role: "system",
+          content: `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
+          timestamp: Date.now(),
+        };
+        const finalMessages = [...nextMessages, errMsg];
+        setMessages(finalMessages);
+        persistSession(sessionId!, finalMessages);
+      }
     } finally {
       setLoading(false);
       setStreamingContent("");
       setStreamingToolCalls([]);
+      abortRef.current = null;
     }
   }
 
@@ -248,6 +271,11 @@ export default function AiChatView({ vaultPath }: Props) {
       e.preventDefault();
       handleSend();
     }
+  }
+
+  function handleStop() {
+    abortRef.current?.abort();
+    abortRef.current = null;
   }
 
   function handleSaveConfig(newConfig: AiConfig) {
@@ -412,7 +440,7 @@ export default function AiChatView({ vaultPath }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16 }}>
                   <Bot size={48} style={{ color: "var(--hairline-strong)", opacity: 0.5 }} />
                   <div style={{ fontSize: 15, color: "var(--ink-soft)", textAlign: "center", maxWidth: 400 }}>
-                    Chat with AI to manage your vault. Ask me to create, read, update, or delete notes, meetings, todos, and projects.
+                    Chat with AI to manage your vault or just have a conversation. Ask me to create notes, organize meetings, draft stories, brainstorm ideas, and more.
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 500 }}>
                     {SUGGESTIONS.map((s) => (
@@ -474,7 +502,7 @@ export default function AiChatView({ vaultPath }: Props) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={configured ? "Ask me anything about your vault..." : "Configure AI settings first..."}
+                placeholder={configured ? "Ask me anything — vault tasks, writing, ideas..." : "Configure AI settings first..."}
                 rows={1}
                 style={{
                   flex: 1,
@@ -493,27 +521,50 @@ export default function AiChatView({ vaultPath }: Props) {
                   margin: 0,
                 }}
             />
-              <button
-                  onClick={handleSend}
-                  disabled={!input.trim() || loading}
-                  title="Send message"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    flexShrink: 0,
-                    borderRadius: "var(--radius-sm)",
-                    border: "none",
-                    background: input.trim() && !loading ? "var(--accent-info)" : "var(--hairline)",
-                    color: input.trim() && !loading ? "#fff" : "var(--ink-soft)",
-                    cursor: input.trim() && !loading ? "pointer" : "not-allowed",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "background 0.15s",
-                  }}
-              >
-                <Send size={14} />
-              </button>
+              {loading ? (
+                <button
+                    onClick={handleStop}
+                    title="Stop generating"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      flexShrink: 0,
+                      borderRadius: "var(--radius-sm)",
+                      border: "none",
+                      background: "var(--danger)",
+                      color: "#fff",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "background 0.15s",
+                    }}
+                >
+                  <Square size={14} fill="currentColor" />
+                </button>
+              ) : (
+                <button
+                    onClick={handleSend}
+                    disabled={!input.trim()}
+                    title="Send message"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      flexShrink: 0,
+                      borderRadius: "var(--radius-sm)",
+                      border: "none",
+                      background: input.trim() ? "var(--accent-info)" : "var(--hairline)",
+                      color: input.trim() ? "#fff" : "var(--ink-soft)",
+                      cursor: input.trim() ? "pointer" : "not-allowed",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "background 0.15s",
+                    }}
+                >
+                  <Send size={14} />
+                </button>
+              )}
             </div>
             <div style={{
               fontSize: 11,
@@ -565,15 +616,21 @@ function MessageBubble({ message }: { message: AiMessage }) {
         )}
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 14,
-            lineHeight: 1.6,
-            color: isError ? "var(--danger)" : "var(--ink)",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}>
-            {message.content}
-          </div>
+          {isUser || isError ? (
+            <div style={{
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: isError ? "var(--danger)" : "var(--ink)",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}>
+              {message.content}
+            </div>
+          ) : (
+            <div className="ai-markdown" style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink)", wordBreak: "break-word" }}>
+              <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
+            </div>
+          )}
 
           {message.toolCalls && message.toolCalls.length > 0 && (
               <div style={{ marginTop: 8 }}>
@@ -670,11 +727,12 @@ function ToolCallCard({ toolCall }: { toolCall: AiToolCall }) {
 }
 
 const SUGGESTIONS = [
-  "Show me all my notes",
-  "Create a new note called 'Meeting Prep'",
-  "What meetings do I have?",
+  "Draft a short story about a traveler",
+  "Create a note called 'Meeting Prep'",
+  "What meetings do I have today?",
   "Add a todo item to my list",
   "Show my projects and their status",
+  "Help me brainstorm app ideas",
 ];
 
 const avatarStyle: React.CSSProperties = {
