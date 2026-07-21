@@ -103,3 +103,47 @@ export interface TrashEntry {
   is_dir: boolean;
   deleted_at: string;
 }
+
+/* ── AI Chat types ── */
+
+export type AiProvider = "lmstudio" | "openai" | "anthropic" | "ollama" | "openrouter";
+
+export interface AiConfig {
+  provider: AiProvider;
+  model: string;
+  apiKey: string;
+  baseUrl: string;
+}
+
+export interface AiToolCall {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+  result?: string;
+}
+
+export interface AiMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  toolCalls?: AiToolCall[];
+  timestamp: number;
+}
+
+export interface AiToolDefinition {
+  name: string;
+  description: string;
+  parameters: {
+    type: "object";
+    properties: Record<string, { type: string; description?: string; enum?: string[] }>;
+    required?: string[];
+  };
+}
+
+export interface AiSession {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  messages: AiMessage[];
+}

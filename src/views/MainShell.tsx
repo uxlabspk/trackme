@@ -1,16 +1,17 @@
 import {useCallback, useEffect, useState} from "react";
-import {Calendar, FileText, CalendarDays, CheckSquare, Settings, FolderKanban, Sun, Moon, Trash2, Search} from "lucide-react";
+import {Calendar, FileText, CalendarDays, CheckSquare, Settings, FolderKanban, Sun, Moon, Trash2, Search, Bot} from "lucide-react";
 import NotesView from "./NotesView";
 import MeetingsView from "./MeetingsView";
 import TodosView from "./TodosView";
 import AgendaView from "./AgendaView";
 import ProjectsView from "./ProjectsView";
 import TrashView from "./TrashView";
+import AiChatView from "./AiChatView";
 import SearchModal from "../components/SearchModal";
 import VaultSwitcher from "../components/VaultSwitcher";
 import {useTheme} from "../lib/ThemeContext";
 
-type Tab = "agenda" | "notes" | "meetings" | "todos" | "projects" | "trash";
+type Tab = "agenda" | "notes" | "meetings" | "todos" | "projects" | "ai" | "trash";
 
 interface Props {
     vaultPath: string;
@@ -47,6 +48,12 @@ const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] 
         label: "Projects",
         accent: "var(--moss)",
         icon: <FolderKanban size={14}/>,
+    },
+    {
+        id: "ai",
+        label: "AI",
+        accent: "var(--accent-info)",
+        icon: <Bot size={14}/>,
     }
 ];
 
@@ -267,6 +274,7 @@ export default function MainShell({vaultPath, onVaultSwitch}: Props) {
                 {tab === "meetings" && <MeetingsView vaultPath={vaultPath} searchTarget={searchTarget?.tab === "meetings" ? searchTarget.relPath : null} onSearchHandled={clearSearchTarget}/>}
                 {tab === "todos" && <TodosView vaultPath={vaultPath} searchTarget={searchTarget?.tab === "todos" ? searchTarget.relPath : null} onSearchHandled={clearSearchTarget}/>}
                 {tab === "projects" && <ProjectsView vaultPath={vaultPath} searchTarget={searchTarget?.tab === "projects" ? searchTarget.relPath : null} onSearchHandled={clearSearchTarget}/>}
+                {tab === "ai" && <AiChatView vaultPath={vaultPath}/>}
                 {tab === "trash" && <TrashView vaultPath={vaultPath}/>}
             </main>
 
