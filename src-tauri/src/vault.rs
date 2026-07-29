@@ -16,7 +16,7 @@ pub struct VaultEntry {
 pub fn bootstrap_vault(root: &str) -> anyhow::Result<()> {
     let root = Path::new(root);
     fs::create_dir_all(root)?;
-    for sub in ["notes", "meetings", "todos", "projects", ".trackme", ".trackme/trash"] {
+    for sub in ["notes", "meetings", "todos", "projects", "canvas", ".trackme", ".trackme/trash"] {
         fs::create_dir_all(root.join(sub))?;
     }
 
@@ -57,7 +57,7 @@ fn walk_dir(dir: &Path, root: &Path) -> anyhow::Result<Vec<VaultEntry>> {
                 is_dir: true,
                 children,
             });
-        } else if name.ends_with(".md") {
+        } else if name.ends_with(".md") || name.ends_with(".canvas.json") {
             entries.push(VaultEntry {
                 name,
                 rel_path,

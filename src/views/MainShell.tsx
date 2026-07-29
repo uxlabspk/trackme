@@ -1,7 +1,8 @@
 import {useCallback, useEffect, useState} from "react";
-import {Calendar, FileText, CalendarDays, CheckSquare, Settings, FolderKanban, Sun, Moon, Trash2, Search, Bot, Network} from "lucide-react";
+import {Calendar, FileText, CalendarDays, CheckSquare, Settings, FolderKanban, Sun, Moon, Trash2, Search, Bot, Network, LayoutGrid} from "lucide-react";
 import NotesView from "./NotesView";
 import GraphView from "./GraphView";
+import CanvasView from "./CanvasView";
 import MeetingsView from "./MeetingsView";
 import TodosView from "./TodosView";
 import AgendaView from "./AgendaView";
@@ -12,7 +13,7 @@ import SearchModal from "../components/SearchModal";
 import VaultSwitcher from "../components/VaultSwitcher";
 import {useTheme} from "../lib/ThemeContext";
 
-type Tab = "agenda" | "notes" | "graph" | "meetings" | "todos" | "projects" | "ai" | "trash";
+type Tab = "agenda" | "notes" | "graph" | "canvas" | "meetings" | "todos" | "projects" | "ai" | "trash";
 
 interface Props {
     vaultPath: string;
@@ -37,6 +38,12 @@ const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] 
         label: "Graph",
         accent: "var(--moss)",
         icon: <Network size={14}/>,
+    },
+    {
+        id: "canvas",
+        label: "Canvas",
+        accent: "var(--clay)",
+        icon: <LayoutGrid size={14}/>,
     },
     {
         id: "meetings",
@@ -279,6 +286,7 @@ export default function MainShell({vaultPath, onVaultSwitch}: Props) {
                 {tab === "agenda" && <AgendaView vaultPath={vaultPath} onNavigate={setTab}/>}
                 {tab === "notes" && <NotesView vaultPath={vaultPath} searchTarget={searchTarget?.tab === "notes" ? searchTarget.relPath : null} onSearchHandled={clearSearchTarget}/>}
                 {tab === "graph" && <GraphView vaultPath={vaultPath}/>}
+                {tab === "canvas" && <CanvasView vaultPath={vaultPath}/>}
                 {tab === "meetings" && <MeetingsView vaultPath={vaultPath} searchTarget={searchTarget?.tab === "meetings" ? searchTarget.relPath : null} onSearchHandled={clearSearchTarget}/>}
                 {tab === "todos" && <TodosView vaultPath={vaultPath} searchTarget={searchTarget?.tab === "todos" ? searchTarget.relPath : null} onSearchHandled={clearSearchTarget}/>}
                 {tab === "projects" && <ProjectsView vaultPath={vaultPath} searchTarget={searchTarget?.tab === "projects" ? searchTarget.relPath : null} onSearchHandled={clearSearchTarget}/>}
