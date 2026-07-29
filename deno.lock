@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@deno/installer-shell-setup@*": "0.3.4",
     "npm:@milkdown/crepe@^7.21.2": "7.21.2_typescript@5.6.3",
     "npm:@milkdown/kit@^7.21.2": "7.21.2_@codemirror+language@6.12.4_@codemirror+state@6.7.1_@codemirror+view@6.43.6_typescript@5.6.3",
     "npm:@milkdown/plugin-emoji@^7.21.2": "7.21.2",
@@ -27,6 +28,11 @@
     "npm:vite-plugin-node-polyfills@0.28": "0.28.0_vite@6.4.3",
     "npm:vite@*": "6.4.3",
     "npm:vite@^6.0.1": "6.4.3"
+  },
+  "jsr": {
+    "@deno/installer-shell-setup@0.3.4": {
+      "integrity": "48665d1a737d487cce6874bc97bba70a5aeffa7053aca3f60df93c6fab8963b4"
+    }
   },
   "npm": {
     "@babel/code-frame@7.29.7": {
