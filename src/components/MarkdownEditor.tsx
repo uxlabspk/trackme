@@ -3,6 +3,7 @@ import { Crepe, CrepeFeature } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/frame.css";
 import "@milkdown/crepe/theme/common/style.css";
 import { remarkEmojiPlugin } from "@milkdown/plugin-emoji";
+import { wikilinkRemark, wikilinkSchema } from "../lib/wikilink-plugin";
 
 interface Props {
   value: string;
@@ -33,6 +34,7 @@ export default function MarkdownEditor({ value, onChange }: Props) {
     });
 
     crepe.editor.use(remarkEmojiPlugin);
+    crepe.editor.use(wikilinkRemark).use(wikilinkSchema);
 
     crepe.on((listener) => {
       listener.markdownUpdated((_ctx, markdown, prevMarkdown) => {
