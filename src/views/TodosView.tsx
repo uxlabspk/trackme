@@ -12,7 +12,7 @@ import {
   toggleTodoItem,
 } from "../lib/todos";
 import type { TodoFile, VaultEntry } from "../lib/types";
-import { Trash2 } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Trash2 } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -37,6 +37,7 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
   const [newItemText, setNewItemText] = useState("");
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "todos"));
@@ -134,13 +135,16 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
     <div style={{ display: "flex", height: "100%" }}>
       <aside
         style={{
-          width: 240,
+          width: sidebarOpen ? 240 : 0,
           flexShrink: 0,
-          borderRight: "1px solid var(--hairline)",
+          borderRight: sidebarOpen ? "1px solid var(--hairline)" : "none",
           overflowY: "auto",
+          overflowX: "hidden",
+          transition: "width 0.15s ease",
           paddingBottom: 12,
         }}
       >
+        {sidebarOpen && (<>
         <div
           style={{
             display: "flex",
@@ -152,7 +156,26 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
           <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
             TODO LISTS
           </h2>
-          <button
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              title="Hide sidebar"
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                width: 24,
+                height: 24,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--ink-soft)",
+              }}
+            >
+              <PanelLeftClose size={14} />
+            </button>
+            <button
             onClick={openNewDialog}
             title="New todo list"
             style={{
@@ -167,7 +190,8 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
             }}
           >
             +
-          </button>
+            </button>
+          </div>
         </div>
         <FileTreeList
           entries={tree}
@@ -175,6 +199,7 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
           onSelect={setSelected}
           emptyLabel="No todo lists yet"
         />
+        </> )}
       </aside>
 
       <section style={{ flex: 1, minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -187,8 +212,32 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
               justifyContent: "center",
               color: "var(--ink-soft)",
               fontSize: 14,
+              position: "relative",
             }}
           >
+            {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              title="Show sidebar"
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 12,
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                width: 28,
+                height: 28,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--ink-soft)",
+              }}
+            >
+              <PanelLeftOpen size={14} />
+            </button>
+            )}
             Select a todo list, or create one.
           </div>
         ) : (
@@ -199,10 +248,32 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
                 borderBottom: "1px solid var(--hairline)",
                 display: "flex",
                 alignItems: "flex-start",
-                justifyContent: "space-between",
+                gap: 10,
               }}
             >
-              <div>
+              {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                title="Show sidebar"
+                style={{
+                  border: "1px solid var(--hairline-strong)",
+                  background: "var(--paper-raised)",
+                  borderRadius: "var(--radius-sm)",
+                  width: 28,
+                  height: 28,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--ink-soft)",
+                  flexShrink: 0,
+                  marginTop: 4,
+                }}
+              >
+                <PanelLeftOpen size={14} />
+              </button>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <input
                   value={todo.frontmatter.name ?? ""}
                   onChange={(e) => {

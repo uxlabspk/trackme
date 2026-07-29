@@ -14,7 +14,7 @@ import { uniquePath } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { MeetingFile, MeetingFrontmatter, Recurrence, VaultEntry } from "../lib/types";
 import { format, addDays } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2 } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -50,6 +50,8 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
   const [dirty, setDirty] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [occurrencesOpen, setOccurrencesOpen] = useState(true);
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "meetings"));
@@ -160,13 +162,16 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
     <div style={{ display: "flex", height: "100%" }}>
       <aside
         style={{
-          width: 240,
+          width: sidebarOpen ? 240 : 0,
           flexShrink: 0,
-          borderRight: "1px solid var(--hairline)",
+          borderRight: sidebarOpen ? "1px solid var(--hairline)" : "none",
           overflowY: "auto",
+          overflowX: "hidden",
+          transition: "width 0.15s ease",
           paddingBottom: 12,
         }}
       >
+        {sidebarOpen && (<>
         <div
           style={{
             display: "flex",
@@ -178,7 +183,26 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
           <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
             MEETINGS
           </h2>
-          <button
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              title="Hide sidebar"
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                width: 24,
+                height: 24,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--ink-soft)",
+              }}
+            >
+              <PanelLeftClose size={14} />
+            </button>
+            <button
             onClick={openNewDialog}
             title="New meeting series"
             style={{
@@ -195,12 +219,14 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
             +
           </button>
         </div>
+        </div>
         <FileTreeList
           entries={tree}
           selectedRelPath={selected}
           onSelect={setSelected}
           emptyLabel="No meeting series yet"
         />
+        </> )}
       </aside>
 
       <section style={{ flex: 1, minWidth: 0, display: "flex", overflow: "hidden" }}>
@@ -213,8 +239,32 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
               justifyContent: "center",
               color: "var(--ink-soft)",
               fontSize: 14,
+              position: "relative",
             }}
           >
+            {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              title="Show sidebar"
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 12,
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                width: 28,
+                height: 28,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--ink-soft)",
+              }}
+            >
+              <PanelLeftOpen size={14} />
+            </button>
+            )}
             Select a meeting series, or create one.
           </div>
         ) : (
@@ -224,9 +274,31 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                 style={{
                   display: "flex",
                   alignItems: "flex-start",
-                  justifyContent: "space-between",
+                  gap: 10,
                 }}
               >
+                {!sidebarOpen && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  title="Show sidebar"
+                  style={{
+                    border: "1px solid var(--hairline-strong)",
+                    background: "var(--paper-raised)",
+                    borderRadius: "var(--radius-sm)",
+                    width: 28,
+                    height: 28,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--ink-soft)",
+                    flexShrink: 0,
+                    marginTop: 4,
+                  }}
+                >
+                  <PanelLeftOpen size={14} />
+                </button>
+                )}
                 <input
                   value={meeting.frontmatter.title ?? ""}
                   onChange={(e) => updateField("title", e.target.value)}
@@ -242,6 +314,25 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                     color: "var(--ink)",
                   }}
                 />
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  {!occurrencesOpen && (
+                  <button
+                      onClick={() => setOccurrencesOpen(true)}
+                      title="Show upcoming"
+                      style={{
+                          display: "flex",
+                          alignItems: "center",
+                          border: "1px solid var(--hairline-strong)",
+                          background: "var(--paper-raised)",
+                          borderRadius: "var(--radius-sm)",
+                          padding: "6px 8px",
+                          cursor: "pointer",
+                          color: "var(--ink-soft)",
+                      }}
+                  >
+                      <PanelRightOpen size={14} />
+                  </button>
+                  )}
                   <button
                       onClick={handleDelete}
                       style={{
@@ -261,6 +352,7 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                       <Trash2 size={14} />
                       Remove
                   </button>
+                  </div>
               </div>
               <div
                 style={{
@@ -435,24 +527,48 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
 
             <aside
               style={{
-                width: 260,
+                width: occurrencesOpen ? 260 : 0,
                 flexShrink: 0,
-                borderLeft: "1px solid var(--hairline)",
-                padding: "24px 20px",
+                borderLeft: occurrencesOpen ? "1px solid var(--hairline)" : "none",
+                padding: occurrencesOpen ? "24px 20px" : 0,
                 overflowY: "auto",
+                overflowX: "hidden",
+                transition: "width 0.15s ease",
               }}
             >
+              {occurrencesOpen && (
+              <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <h3
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
                   color: "var(--ink-soft)",
                   letterSpacing: "0.04em",
-                  marginBottom: 14,
+                  margin: 0,
                 }}
               >
                 NEXT 90 DAYS
               </h3>
+              <button
+                onClick={() => setOccurrencesOpen(false)}
+                title="Hide upcoming"
+                style={{
+                  border: "1px solid var(--hairline-strong)",
+                  background: "var(--paper-raised)",
+                  borderRadius: "var(--radius-sm)",
+                  width: 22,
+                  height: 22,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--ink-soft)",
+                }}
+              >
+                <PanelRightClose size={12} />
+              </button>
+              </div>
               {occurrences.length === 0 ? (
                 <p style={{ fontSize: 13, color: "var(--ink-soft)", fontStyle: "italic" }}>
                   No occurrences in this window.
@@ -489,6 +605,8 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                     </div>
                   ))}
                 </div>
+              )}
+              </>
               )}
             </aside>
           </>

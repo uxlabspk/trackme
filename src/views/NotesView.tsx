@@ -6,7 +6,7 @@ import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFold
 import { uniquePath } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
-import { FolderPlus, Trash2 } from "lucide-react";
+import { FolderPlus, PanelLeftClose, PanelLeftOpen, Trash2 } from "lucide-react";
 import "../styles/milkdown.css";
 
 interface Props {
@@ -53,6 +53,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
   const [folderOpen, setFolderOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [currentFolder, setCurrentFolder] = useState("notes");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const saveTimer = useRef<number | null>(null);
 
   const refreshTree = useCallback(async () => {
@@ -196,13 +197,16 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
     <div style={{ display: "flex", height: "100%" }}>
       <aside
         style={{
-          width: 240,
+          width: sidebarOpen ? 240 : 0,
           flexShrink: 0,
-          borderRight: "1px solid var(--hairline)",
+          borderRight: sidebarOpen ? "1px solid var(--hairline)" : "none",
           overflowY: "auto",
+          overflowX: "hidden",
+          transition: "width 0.15s ease",
           paddingBottom: 12,
         }}
       >
+        {sidebarOpen && (<>
         <div
           style={{
             display: "flex",
@@ -215,6 +219,24 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
             NOTES
           </h2>
           <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              title="Hide sidebar"
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                width: 24,
+                height: 24,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--ink-soft)",
+              }}
+            >
+              <PanelLeftClose size={14} />
+            </button>
             <button
               onClick={openFolderDialog}
               title="New folder"
@@ -261,6 +283,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
           onDeleteFolder={handleDeleteFolder}
           emptyLabel="No notes yet — click + to add one"
         />
+        </> )}
       </aside>
 
       <section style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
@@ -273,8 +296,32 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
               alignItems: "center",
               justifyContent: "center",
               gap: 24,
+              position: "relative",
             }}
           >
+            {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              title="Show sidebar"
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 12,
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                width: 28,
+                height: 28,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--ink-soft)",
+              }}
+            >
+              <PanelLeftOpen size={14} />
+            </button>
+            )}
             <div style={{ fontSize: 14, color: "var(--ink-soft)" }}>
               Select a note, or create one to get started.
             </div>
@@ -311,12 +358,33 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                gap: 10,
                 padding: "14px 28px 10px",
                 borderBottom: "1px solid var(--hairline)",
               }}
             >
-              <div>
+              {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                title="Show sidebar"
+                style={{
+                  border: "1px solid var(--hairline-strong)",
+                  background: "var(--paper-raised)",
+                  borderRadius: "var(--radius-sm)",
+                  width: 28,
+                  height: 28,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--ink-soft)",
+                  flexShrink: 0,
+                }}
+              >
+                <PanelLeftOpen size={14} />
+              </button>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <input
                   value={note.frontmatter.title ?? ""}
                   onChange={(e) => {
