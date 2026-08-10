@@ -21,6 +21,24 @@ interface Props {
   onSearchHandled?: () => void;
 }
 
+function isValidRecurrence(r: unknown): r is Recurrence {
+  return (
+    r != null &&
+    typeof r === "object" &&
+    !Array.isArray(r) &&
+    "freq" in r &&
+    typeof (r as Recurrence).freq === "string" &&
+    "days" in r &&
+    Array.isArray((r as Recurrence).days)
+  );
+}
+
+function ensureRecurrence(r: unknown): Recurrence {
+  const def = defaultRecurrence();
+  if (!isValidRecurrence(r)) return def;
+  return { ...def, ...r };
+}
+
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -90,7 +108,7 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
         relPath: selected,
         frontmatter: {
           ...frontmatter,
-          recurrence: frontmatter.recurrence ?? defaultRecurrence(),
+          recurrence: ensureRecurrence(frontmatter.recurrence),
         },
         body,
       });
@@ -489,7 +507,7 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                 }}
               >
                 <RecurrenceEditor
-                  value={meeting.frontmatter.recurrence ?? defaultRecurrence()}
+                  value={meeting.frontmatter.recurrence!}
                   onChange={(rec) => updateField("recurrence", rec)}
                 />
               </div>
