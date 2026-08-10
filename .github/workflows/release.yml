@@ -109,13 +109,18 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             patchelf \
-            libasound2-dev
+            libasound2-dev \
+            pkg-config
 
       # ---- Install Windows build dependencies ----
       # whisper-rs-sys needs CMake to compile whisper.cpp
       - name: Install CMake (Windows)
         if: matrix.platform == 'windows-latest'
         run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+
+      - name: Install CMake (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: brew install cmake
 
       # ---- Install Rust ----
       # Explicit toolchain install (rather than relying on tauri-action
@@ -134,6 +139,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          shared-key: ${{ matrix.platform }}-${{ hashFiles('src-tauri/Cargo.lock') }}
 
       # ---- Verify version consistency ----
       # Make sure the version in tauri.conf.json matches the git tag.
@@ -159,16 +165,27 @@ jobs:
 
           echo "✓ Versions match — proceeding with build."
 
-      # ---- Build the Tauri app and upload artifacts to the release ----
-      # tauri-action normally assumes an npm/yarn/pnpm project. Since this
-      # project uses Deno, we point it at `deno task tauri` explicitly via
-      # tauriScript so it runs the right build command instead of guessing.
-      - name: Build and upload to release
-        uses: tauri-apps/tauri-action@v0
+      # ---- Build the Tauri app ----
+      - name: Build Tauri app
+        shell: bash
+        run: deno task tauri build ${{ matrix.args }}
+
+      # ---- Upload artifacts to the release ----
+      - name: Upload artifacts to release
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
-          args: ${{ matrix.args }}
-          projectPath: .
-          tauriScript: deno task tauri
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          BUNDLE_DIR="src-tauri/target/release/bundle"
+
+          # Upload all bundle artifacts (msi, nsis, deb, rpm, dmg, etc.)
+          find "$BUNDLE_DIR" -type f \( -name "*.msi" -o -name "*.msi.sig" \
+            -o -name "*.nsis.zip" -o -name "*.nsis.zip.sig" \
+            -o -name "*.exe" -o -name "*.exe.sig" \
+            -o -name "*.deb" -o -name "*.deb.sig" \
+            -o -name "*.rpm" -o -name "*.rpm.sig" \
+            -o -name "*.dmg" -o -name "*.dmg.sig" \
+            -o -name "*.AppImage" -o -name "*.AppImage.sig" \) \
+            ! -name "*.nsis.exe" \
+            -exec gh release upload "$TAG" {} --clobber \;
