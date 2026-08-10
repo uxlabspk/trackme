@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square } from "lucide-react";
+import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square, Mic } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -8,6 +8,8 @@ import { loadAiConfig, saveAiConfig, isAiConfigured } from "../lib/aiConfig";
 import { sendChatMessageStream, buildVaultContext, getSystemPrompt, VAULT_TOOLS, type StreamCallbacks } from "../lib/aiChat";
 import { generateSessionId, getLastSessionId, setLastSessionId, saveSessionTo, loadSession, listSessions, deleteSession, deriveSessionTitle } from "../lib/aiHistory";
 import AiSettingsModal from "../components/AiSettingsModal";
+import { startListening, stopListening, isAvailable, installModel, listModels } from "tauri-plugin-stt-api";
+import { listen } from "@tauri-apps/api/event";
 
 interface Props {
   vaultPath: string;
@@ -27,6 +29,8 @@ export default function AiChatView({ vaultPath }: Props) {
   const [vaultContext, setVaultContext] = useState<string>("");
   const [contextLoading, setContextLoading] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(true);
+  const [recording, setRecording] = useState(false);
+  const unlistenResultRef = useRef<(() => void) | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -71,6 +75,16 @@ export default function AiChatView({ vaultPath }: Props) {
   useEffect(() => {
     refreshContext();
   }, [refreshContext]);
+
+  // Auto-install small model if nothing is installed (better quality than tiny)
+  useEffect(() => {
+    isAvailable().then(async (resp) => {
+      if (resp.available) return;
+      const models = await listModels();
+      const small = models.models.find(m => m.id === "small");
+      if (small && !small.installed) await installModel("small");
+    }).catch(() => {});
+  }, []);
 
   // Auto-scroll
   useEffect(() => {
@@ -277,6 +291,28 @@ export default function AiChatView({ vaultPath }: Props) {
   function handleStop() {
     abortRef.current?.abort();
     abortRef.current = null;
+  }
+
+  function handleMicDown() {
+    if (recording || loading) return;
+    setRecording(true);
+    // ponytail: register listener BEFORE start — async worker emits after stopListening returns
+    listen<{ transcript: string; isFinal: boolean }>("plugin:stt:result", (event) => {
+      if (event.payload.isFinal && event.payload.transcript) {
+        setInput(prev => prev ? prev + " " + event.payload.transcript : event.payload.transcript);
+      }
+      if (unlistenResultRef.current) { unlistenResultRef.current(); unlistenResultRef.current = null; }
+      setRecording(false);
+    }).then(unlisten => { unlistenResultRef.current = unlisten; });
+    startListening({ language: "en-US" }).catch(() => {
+      setRecording(false);
+      if (unlistenResultRef.current) { unlistenResultRef.current(); unlistenResultRef.current = null; }
+    });
+  }
+
+  function handleMicUp() {
+    if (!recording) return;
+    stopListening().catch(() => {});
   }
 
   function handleSaveConfig(newConfig: AiConfig) {
@@ -527,6 +563,33 @@ export default function AiChatView({ vaultPath }: Props) {
                   margin: 0,
                 }}
             />
+              {!loading && (
+                <button
+                    onMouseDown={handleMicDown}
+                    onMouseUp={handleMicUp}
+                    onMouseLeave={handleMicUp}
+                    onTouchStart={handleMicDown}
+                    onTouchEnd={handleMicUp}
+                    title={recording ? "Release to stop" : "Hold to speak"}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      flexShrink: 0,
+                      borderRadius: "var(--radius-sm)",
+                      border: "none",
+                      background: recording ? "var(--danger)" : "transparent",
+                      color: recording ? "#fff" : "var(--ink-soft)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "background 0.15s, color 0.15s",
+                      animation: recording ? "mic-pulse 1s ease-in-out infinite" : "none",
+                    }}
+                >
+                  <Mic size={14} />
+                </button>
+              )}
               {loading ? (
                 <button
                     onClick={handleStop}
@@ -579,7 +642,7 @@ export default function AiChatView({ vaultPath }: Props) {
               fontFamily: "var(--font-mono)",
               textAlign: "center",
             }}>
-              Enter to send · Shift+Enter for newline
+              Enter to send · Shift+Enter for newline · Hold mic to speak
             </div>
           </div>
         </div>
@@ -591,7 +654,7 @@ export default function AiChatView({ vaultPath }: Props) {
             onSave={handleSaveConfig}
         />
 
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes mic-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
       </div>
   );
 }

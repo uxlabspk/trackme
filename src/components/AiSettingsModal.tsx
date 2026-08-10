@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { AiConfig, AiProvider } from "../lib/types";
 import { PROVIDER_LABELS, providerNeedsKey, getProviderDefaults, getAllDefaultModels } from "../lib/aiConfig";
 import Dialog from "./Dialog";
+import { listModels, installModel, setActiveModel, removeModel, onDownloadProgress, type WhisperModelInfo, type DownloadProgressEvent } from "tauri-plugin-stt-api";
 
 interface Props {
   open: boolean;
@@ -17,6 +18,39 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
   const [model, setModel] = useState(config.model);
   const [apiKey, setApiKey] = useState(config.apiKey);
   const [baseUrl, setBaseUrl] = useState(config.baseUrl);
+
+  // Whisper model manager state
+  const [whisperModels, setWhisperModels] = useState<WhisperModelInfo[]>([]);
+  const [activeWhisperModel, setActiveWhisperModel] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+
+  const refreshModels = useCallback(async () => {
+    try {
+      const resp = await listModels();
+      setWhisperModels(resp.models.filter(m => !m.advanced));
+      setActiveWhisperModel(resp.active ?? null);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (open) refreshModels();
+  }, [open, refreshModels]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    onDownloadProgress((ev: DownloadProgressEvent) => {
+      if (ev.status === "downloading" && ev.progress != null) {
+        setDownloadProgress(ev.progress);
+      }
+      if (ev.status === "complete" || ev.status === "error") {
+        setDownloading(null);
+        setDownloadProgress(0);
+        refreshModels();
+      }
+    }).then(fn => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, [refreshModels]);
 
   function handleProviderChange(p: AiProvider) {
     setProvider(p);
@@ -132,6 +166,68 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
             />
           </div>
         )}
+
+        <div style={{ borderTop: "1px solid var(--hairline)", paddingTop: 14 }}>
+          <label style={{ ...labelStyle, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: 11 }}>
+            Voice Model (Whisper)
+          </label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6 }}>
+            {whisperModels.map(m => {
+              const isActive = m.id === activeWhisperModel;
+              const isDownloading = downloading === m.id;
+              return (
+                <div key={m.id} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 10px",
+                  borderRadius: "var(--radius-sm)",
+                  border: `1px solid ${isActive ? "var(--accent-info)" : "var(--hairline)"}`,
+                  background: isActive ? "var(--accent-info-bg, rgba(59,130,246,0.06))" : "var(--paper)",
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: "var(--ink)" }}>
+                      {m.displayName}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--ink-soft)", fontFamily: "var(--font-mono)" }}>
+                      {m.sizeMb} MB · {m.tier}
+                    </div>
+                  </div>
+                  {isDownloading ? (
+                    <div style={{ fontSize: 11, color: "var(--accent-info)", fontFamily: "var(--font-mono)" }}>
+                      {downloadProgress}%
+                    </div>
+                  ) : m.installed ? (
+                    isActive ? (
+                      <span style={{ fontSize: 11, color: "var(--moss-deep)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>
+                        Active
+                      </span>
+                    ) : (
+                      <button
+                        onClick={async () => { await setActiveModel(m.id); refreshModels(); }}
+                        style={modelBtnStyle}
+                      >
+                        Select
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        setDownloading(m.id);
+                        setDownloadProgress(0);
+                        await installModel(m.id);
+                      }}
+                      disabled={!!downloading}
+                      style={{ ...modelBtnStyle, opacity: downloading ? 0.5 : 1 }}
+                    >
+                      Download
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </Dialog>
   );
@@ -176,4 +272,18 @@ const hintStyle: React.CSSProperties = {
   fontSize: 11.5,
   color: "var(--ink-soft)",
   fontFamily: "var(--font-mono)",
+};
+
+const modelBtnStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontFamily: "var(--font-mono)",
+  fontWeight: 600,
+  padding: "4px 10px",
+  borderRadius: "var(--radius-sm)",
+  border: "1px solid var(--hairline-strong)",
+  background: "var(--paper-raised)",
+  color: "var(--ink)",
+  cursor: "pointer",
+  flexShrink: 0,
+  transition: "background 0.1s",
 };
