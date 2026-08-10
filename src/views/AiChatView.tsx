@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import type { AiConfig, AiMessage, AiSession, AiToolCall } from "../lib/types";
 import { loadAiConfig, saveAiConfig, isAiConfigured } from "../lib/aiConfig";
 import { sendChatMessageStream, buildVaultContext, getSystemPrompt, VAULT_TOOLS, type StreamCallbacks } from "../lib/aiChat";
@@ -628,7 +629,7 @@ function MessageBubble({ message }: { message: AiMessage }) {
             </div>
           ) : (
             <div className="ai-markdown" style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink)", wordBreak: "break-word" }}>
-              <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
+              <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{message.content}</Markdown>
             </div>
           )}
 

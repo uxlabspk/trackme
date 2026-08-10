@@ -177,13 +177,38 @@ button {
   padding: 0.1em 0.35em;
 }
 .ai-markdown pre {
-  background: var(--paper-raised);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-md);
   padding: 0.8em 1em;
   overflow-x: auto;
   margin: 0.5em 0;
 }
+.ai-markdown pre code.hljs {
+  padding: 0;
+  background: transparent;
+}
+/* ponytail: highlight.js token colors — neutral palette, skip full theme import */
+.ai-markdown .hljs-keyword,
+.ai-markdown .hljs-selector-tag,
+.ai-markdown .hljs-built_in,
+.ai-markdown .hljs-type { color: #d73a49; }
+.ai-markdown .hljs-string,
+.ai-markdown .hljs-attr { color: #032f62; }
+.ai-markdown .hljs-number,
+.ai-markdown .hljs-literal { color: #005cc5; }
+.ai-markdown .hljs-comment,
+.ai-markdown .hljs-quote { color: #6a737d; font-style: italic; }
+.ai-markdown .hljs-function .hljs-title,
+.ai-markdown .hljs-title.function_ { color: #6f42c1; }
+.ai-markdown .hljs-variable,
+.ai-markdown .hljs-params { color: #e36209; }
+.ai-markdown .hljs-meta { color: #005cc5; }
+.ai-markdown .hljs-regexp { color: #032f62; }
+.ai-markdown .hljs-symbol { color: #005cc5; }
+.ai-markdown .hljs-section,
+.ai-markdown .hljs-name { color: #005cc5; font-weight: 600; }
+.ai-markdown .hljs-addition { color: #22863a; background: #f0fff4; }
+.ai-markdown .hljs-deletion { color: #b31d28; background: #ffeef0; }
 .ai-markdown pre code {
   background: none;
   border: none;
