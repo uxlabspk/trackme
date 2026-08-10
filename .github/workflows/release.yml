@@ -152,6 +152,10 @@ jobs:
 
           echo "✓ Versions match — proceeding with build."
 
+      - name: Set macOS deployment target
+        if: matrix.platform == 'macos-latest'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> "$GITHUB_ENV"
+
       # ---- Build the Tauri app and upload artifacts to the release ----
       # tauri-action normally assumes an npm/yarn/pnpm project. Since this
       # project uses Deno, we point it at `deno task tauri` explicitly via
