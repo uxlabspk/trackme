@@ -457,9 +457,14 @@ export default function AiChatView({ vaultPath }: Props) {
                 </div>
             )}
 
-            {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
-            ))}
+            {messages.map((msg) => {
+              return (
+                  <MessageBubble
+                      key={msg.id}
+                      message={msg}
+                  />
+              );
+            })}
 
             {loading && streamingContent && (
                 <MessageBubble
@@ -595,8 +600,9 @@ function genId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function MessageBubble({ message }: { message: AiMessage }) {
+function MessageBubble({ message}: { message: AiMessage}) {
   const [toolsExpanded, setToolsExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
   const isError = message.role === "system";
 
@@ -666,9 +672,31 @@ function MessageBubble({ message }: { message: AiMessage }) {
               </div>
           )}
 
-          <div style={{ fontSize: 10, color: "var(--ink-soft)", marginTop: 4, fontFamily: "var(--font-mono)", opacity: 0.6 }}>
-            {new Date(message.timestamp).toLocaleTimeString()}
-          </div>
+          {!isUser && !isError && (
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4, marginTop: 6, opacity: 0.5, transition: "opacity 0.15s" }}
+                   onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
+                   onMouseLeave={(e) => e.currentTarget.style.opacity = "0.5"}>
+                <div style={{ fontSize: 10, color: "var(--ink-soft)", marginTop: 4, fontFamily: "var(--font-mono)", opacity: 0.6 }}>
+                  {new Date(message.timestamp).toLocaleTimeString()}
+                </div>
+                <div>
+                  <button
+                      onClick={() => { navigator.clipboard.writeText(message.content); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                      style={actionBtnStyle}
+                      title="Copy"
+                  >
+                    {copied ? <span style={{ fontSize: 11, color: "var(--moss-deep)" }}>Copied</span> : "Copy"}
+                  </button>
+                  {/*{onRetry && (*/}
+                  {/*    <button onClick={() => onRetry(message.content)} style={actionBtnStyle} title="Retry">*/}
+                  {/*      Retry*/}
+                  {/*    </button>*/}
+                  {/*)}*/}
+                </div>
+              </div>
+          )}
+
+
         </div>
       </div>
   );
@@ -760,6 +788,18 @@ const headerBtnStyle: React.CSSProperties = {
   borderRadius: "var(--radius-sm)",
   cursor: "pointer",
   color: "var(--ink-soft)",
+};
+
+const actionBtnStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontFamily: "var(--font-mono)",
+  color: "var(--ink-soft)",
+  background: "transparent",
+  border: "1px solid var(--hairline)",
+  borderRadius: "var(--radius-sm)",
+  padding: "2px 8px",
+  cursor: "pointer",
+  transition: "background 0.1s",
 };
 
 const suggestionStyle: React.CSSProperties = {
