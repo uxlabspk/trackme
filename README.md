@@ -78,26 +78,8 @@ Visual diagramming with shapes, edges, arrows, and 8 color palettes. Drag, resiz
 
 ## Screenshot
 
-> *Add a screenshot or GIF here to show TrackMe in action.*
+![Preview of Track ME](/images/preview.png)
 
-```
-┌─────────────────────────────────────────────────────┐
-│  TrackMe                            🌙  ─  □  ✕     │
-├──────────┬──────────────────────────────────────────┤
-│          │  Today — Monday, Aug 10                   │
-│  Today   │                                          │
-│  Notes   │  ┌─ Meetings ──────────────────────────┐ │
-│  Graph   │  │ 9:00 AM  Standup                    │ │
-│  Canvas  │  │ 2:00 PM  Design Review              │ │
-│  Meetings│  └─────────────────────────────────────┘ │
-│  Todos   │                                          │
-│  Projects│  ┌─ Todos ─────────────────────────────┐ │
-│  AI      │  │ ☐ Write documentation               │ │
-│  Trash   │  │ ☑ Fix login bug                     │ │
-│          │  │ ☐ Review PR #42                     │ │
-│          │  └─────────────────────────────────────┘ │
-└──────────┴──────────────────────────────────────────┘
-```
 
 ---
 
