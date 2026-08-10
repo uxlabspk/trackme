@@ -55,3 +55,7 @@ export function isAiConfigured(config: AiConfig): boolean {
   if (providerNeedsKey(config.provider) && !config.apiKey) return false;
   return true;
 }
+
+export function getAllDefaultModels(): string[] {
+  return Object.values(PROVIDER_DEFAULTS).map((d) => d.model);
+}

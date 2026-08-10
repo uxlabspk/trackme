@@ -10,8 +10,6 @@ interface Props {
 }
 
 const MOSS = "#4a5d45";
-const MOSS_LIGHT = "#7ba38c";
-const CLAY = "#b0603f";
 const INK_SOFT = "#565f57";
 const HAIRLINE = "#dad5c8";
 const PAPER = "#f7f5f0";

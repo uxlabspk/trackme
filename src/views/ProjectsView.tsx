@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
 import { joinPath, listVaultFolder, readFile, trashFile, writeFile } from "../lib/bridge";
-import { uniquePath } from "../lib/path";
+import { uniquePath, slugify, flattenFiles } from "../lib/path";
 import {
   addColumn,
   addTask,
@@ -24,20 +24,6 @@ interface Props {
   vaultPath: string;
   searchTarget?: string | null;
   onSearchHandled?: () => void;
-}
-
-function slugify(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || "project"
-  );
-}
-
-function flatten(entries: VaultEntry[]): VaultEntry[] {
-  return entries.flatMap((e) => (e.is_dir ? flatten(e.children) : [e]));
 }
 
 export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled }: Props) {
@@ -101,7 +87,7 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
 
   useEffect(() => {
     if (!selected && tree.length > 0) {
-      const files = flatten(tree);
+      const files = flattenFiles(tree);
       if (files.length > 0) setSelected(files[0].rel_path);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

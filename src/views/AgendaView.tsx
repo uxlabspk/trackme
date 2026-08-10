@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { format } from "date-fns";
+import { flattenFiles } from "../lib/path";
 import {
   computeMeetingOccurrences,
   joinPath,
@@ -9,8 +9,8 @@ import {
 } from "../lib/bridge";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import { parseTodoFile, serializeTodoFile, toggleTodoItem } from "../lib/todos";
-import type { MeetingFrontmatter, TodoFile, VaultEntry } from "../lib/types";
-import { Copy, CopyCheck, CopyIcon } from "lucide-react";
+import type { MeetingFrontmatter, TodoFile } from "../lib/types";
+import { CopyIcon } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -33,17 +33,13 @@ interface OpenTodo {
   itemId: string;
 }
 
-function flatten(entries: VaultEntry[]): VaultEntry[] {
-  return entries.flatMap((e) => (e.is_dir ? flatten(e.children) : [e]));
-}
-
 export default function AgendaView({ vaultPath, onNavigate }: Props) {
   const [meetings, setMeetings] = useState<TodayMeeting[] | null>(null);
   const [todoFiles, setTodoFiles] = useState<Record<string, TodoFile> | null>(null);
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = new Intl.DateTimeFormat("sv-SE").format(new Date()); // YYYY-MM-DD
 
   const loadMeetings = useCallback(async () => {
-    const entries = flatten(await listVaultFolder(vaultPath, "meetings"));
+    const entries = flattenFiles(await listVaultFolder(vaultPath, "meetings"));
     const results: TodayMeeting[] = [];
     for (const entry of entries) {
       const raw = await readFile(joinPath(vaultPath, entry.rel_path));
@@ -66,7 +62,7 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
   }, [vaultPath, today]);
 
   const loadTodoFiles = useCallback(async () => {
-    const entries = flatten(await listVaultFolder(vaultPath, "todos"));
+    const entries = flattenFiles(await listVaultFolder(vaultPath, "todos"));
     const files: Record<string, TodoFile> = {};
     for (const entry of entries) {
       const raw = await readFile(joinPath(vaultPath, entry.rel_path));
@@ -140,7 +136,7 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
             marginBottom: 4,
           }}
         >
-          {format(new Date(), "EEEE, MMMM d")}
+          {new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric" }).format(new Date())}
         </div>
         <h1
           style={{

@@ -3,6 +3,7 @@ import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolde
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter";
 import { parseTodoFile, serializeTodoFile, addTodoItem, toggleTodoItem, removeTodoItem } from "./todos";
 import { parseProjectFile, serializeProjectFile, addTask, moveTask, removeTask } from "./projects";
+import { slugify, flattenFiles } from "./path";
 
 /* ── Tool Definitions ── */
 
@@ -281,7 +282,7 @@ export async function buildVaultContext(vaultPath: string): Promise<string> {
   try {
     const notes = await listVaultFolder(vaultPath, "notes");
     if (notes.length > 0) {
-      const flat = flattenEntries(notes).filter((e) => !e.is_dir);
+      const flat = flattenFiles(notes).filter((e) => !e.is_dir);
       const items: string[] = [];
       for (const entry of flat) {
         try {
@@ -299,7 +300,7 @@ export async function buildVaultContext(vaultPath: string): Promise<string> {
   try {
     const meetings = await listVaultFolder(vaultPath, "meetings");
     if (meetings.length > 0) {
-      const flat = flattenEntries(meetings).filter((e) => !e.is_dir);
+      const flat = flattenFiles(meetings).filter((e) => !e.is_dir);
       const items: string[] = [];
       for (const entry of flat) {
         try {
@@ -319,7 +320,7 @@ export async function buildVaultContext(vaultPath: string): Promise<string> {
   try {
     const todos = await listVaultFolder(vaultPath, "todos");
     if (todos.length > 0) {
-      const flat = flattenEntries(todos).filter((e) => !e.is_dir);
+      const flat = flattenFiles(todos).filter((e) => !e.is_dir);
       const items: string[] = [];
       for (const entry of flat) {
         try {
@@ -339,7 +340,7 @@ export async function buildVaultContext(vaultPath: string): Promise<string> {
   try {
     const projects = await listVaultFolder(vaultPath, "projects");
     if (projects.length > 0) {
-      const flat = flattenEntries(projects).filter((e) => !e.is_dir);
+      const flat = flattenFiles(projects).filter((e) => !e.is_dir);
       const items: string[] = [];
       for (const entry of flat) {
         try {
@@ -362,19 +363,13 @@ export async function buildVaultContext(vaultPath: string): Promise<string> {
   return sections.join("\n\n");
 }
 
-function flattenEntries(entries: { name: string; rel_path: string; is_dir: boolean; children: unknown[] }[]): { name: string; rel_path: string; is_dir: boolean }[] {
-  return entries.flatMap((e) =>
-    e.is_dir ? flattenEntries(e.children as { name: string; rel_path: string; is_dir: boolean; children: unknown[] }[]) : [{ name: e.name, rel_path: e.rel_path, is_dir: e.is_dir }]
-  );
-}
-
 /* ── Tool Executor ── */
 
 export async function executeTool(name: string, args: Record<string, unknown>, vaultPath: string): Promise<string> {
   switch (name) {
     case "list_notes": {
       const tree = await listVaultFolder(vaultPath, "notes");
-      const flat = flattenEntries(tree).filter((e) => !e.is_dir);
+      const flat = flattenFiles(tree).filter((e) => !e.is_dir);
       if (flat.length === 0) return "No notes found.";
       const items: string[] = [];
       for (const entry of flat) {
@@ -398,8 +393,8 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
     case "create_note": {
       const title = args.title as string;
       const folder = (args.folder as string) || "notes";
-      const slug = title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "untitled";
-      const relPath = `${folder}/${slug}.md`;
+      const s = slugify(title, "untitled");
+      const relPath = `${folder}/${s}.md`;
       const now = new Date().toISOString();
       const raw = serializeFrontmatter({ title, createdAt: now, updatedAt: now, tags: [] }, (args.body as string) || "");
       await writeFile(joinPath(vaultPath, relPath), raw);
@@ -428,7 +423,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
 
     case "list_meetings": {
       const tree = await listVaultFolder(vaultPath, "meetings");
-      const flat = flattenEntries(tree).filter((e) => !e.is_dir);
+      const flat = flattenFiles(tree).filter((e) => !e.is_dir);
       if (flat.length === 0) return "No meetings found.";
       const items: string[] = [];
       for (const entry of flat) {
@@ -451,8 +446,8 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
 
     case "create_meeting": {
       const title = args.title as string;
-      const slug = title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "meeting";
-      const relPath = `meetings/${slug}.md`;
+      const s = slugify(title, "meeting");
+      const relPath = `meetings/${s}.md`;
       const fm: MeetingFrontmatter = {
         title,
         time: (args.time as string) || undefined,
@@ -498,7 +493,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
 
     case "list_todos": {
       const tree = await listVaultFolder(vaultPath, "todos");
-      const flat = flattenEntries(tree).filter((e) => !e.is_dir);
+      const flat = flattenFiles(tree).filter((e) => !e.is_dir);
       if (flat.length === 0) return "No todo lists found.";
       const items: string[] = [];
       for (const entry of flat) {
@@ -523,8 +518,8 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
 
     case "create_todo_list": {
       const name = args.name as string;
-      const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "list";
-      const relPath = `todos/${slug}.md`;
+      const s = slugify(name, "list");
+      const relPath = `todos/${s}.md`;
       const raw = serializeFrontmatter({ name }, "");
       await writeFile(joinPath(vaultPath, relPath), raw);
       return `Created todo list "${name}" at ${relPath}`;
@@ -563,7 +558,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
 
     case "list_projects": {
       const tree = await listVaultFolder(vaultPath, "projects");
-      const flat = flattenEntries(tree).filter((e) => !e.is_dir);
+      const flat = flattenFiles(tree).filter((e) => !e.is_dir);
       if (flat.length === 0) return "No projects found.";
       const items: string[] = [];
       for (const entry of flat) {
@@ -597,8 +592,8 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
 
     case "create_project": {
       const name = args.name as string;
-      const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "project";
-      const relPath = `projects/${slug}.md`;
+      const s = slugify(name, "project");
+      const relPath = `projects/${s}.md`;
       const project = serializeProjectFile({
         relPath,
         frontmatter: { name, description: (args.description as string) || "", columns: ["Backlog", "To Do", "In Progress", "Done"], tasks: [] },
@@ -928,9 +923,7 @@ function parseSSELine(line: string): Record<string, unknown> | null {
 }
 
 function getEndpointStreaming(config: AiConfig): string {
-  const base = config.baseUrl.replace(/\/+$/, "");
-  if (config.provider === "anthropic") return `${base}/v1/messages`;
-  return `${base}/chat/completions`;
+  return getEndpoint(config);
 }
 
 export async function sendChatMessageStream(

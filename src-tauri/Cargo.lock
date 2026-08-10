@@ -3994,7 +3994,6 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
  "tauri-plugin-notification",
- "walkdir",
 ]
 
 [[package]]

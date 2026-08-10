@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
 import { joinPath, listVaultFolder, readFile, trashFile, writeFile } from "../lib/bridge";
-import { uniquePath } from "../lib/path";
+import { uniquePath, slugify, flattenFiles } from "../lib/path";
 import {
   addTodoItem,
   editTodoItemText,
@@ -18,16 +18,6 @@ interface Props {
   vaultPath: string;
   searchTarget?: string | null;
   onSearchHandled?: () => void;
-}
-
-function slugify(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || "list"
-  );
 }
 
 export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: Props) {
@@ -78,9 +68,7 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled }: 
   // Default-select todos.md on first load if nothing selected
   useEffect(() => {
     if (!selected && tree.length > 0) {
-      const flatten = (entries: VaultEntry[]): VaultEntry[] =>
-        entries.flatMap((e) => (e.is_dir ? flatten(e.children) : [e]));
-      const files = flatten(tree);
+      const files = flattenFiles(tree);
       if (files.length > 0) setSelected(files[0].rel_path);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

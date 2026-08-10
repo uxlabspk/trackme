@@ -12,10 +12,6 @@ export function setLastVaultPath(path: string): void {
   localStorage.setItem(LAST_VAULT_KEY, path);
 }
 
-export function clearLastVaultPath(): void {
-  localStorage.removeItem(LAST_VAULT_KEY);
-}
-
 /* ── Multi-vault helpers ── */
 
 export function getVaults(): string[] {

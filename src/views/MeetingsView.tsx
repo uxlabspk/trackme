@@ -10,10 +10,9 @@ import {
   trashFile,
   writeFile,
 } from "../lib/bridge";
-import { uniquePath } from "../lib/path";
+import { uniquePath, slugify } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { MeetingFile, MeetingFrontmatter, Recurrence, VaultEntry } from "../lib/types";
-import { format, addDays } from "date-fns";
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2 } from "lucide-react";
 
 interface Props {
@@ -22,14 +21,18 @@ interface Props {
   onSearchHandled?: () => void;
 }
 
-function slugify(title: string): string {
-  return (
-    title
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || "untitled-meeting"
-  );
+function formatDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+function formatDayOfWeek(d: Date): string {
+  return new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric" }).format(d);
 }
 
 function defaultRecurrence(): Recurrence {
@@ -37,7 +40,7 @@ function defaultRecurrence(): Recurrence {
     freq: "weekly",
     days: [],
     interval: 1,
-    start_date: format(new Date(), "yyyy-MM-dd"),
+    start_date: formatDate(new Date()),
     end_date: null,
   };
 }
@@ -103,8 +106,8 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
       setOccurrences([]);
       return;
     }
-    const windowStart = format(new Date(), "yyyy-MM-dd");
-    const windowEnd = format(addDays(new Date(), 90), "yyyy-MM-dd");
+    const windowStart = formatDate(new Date());
+    const windowEnd = formatDate(addDays(new Date(), 90));
     computeMeetingOccurrences(meeting.frontmatter.recurrence, windowStart, windowEnd)
       .then(setOccurrences)
       .catch(() => setOccurrences([]));
@@ -595,7 +598,7 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                           fontWeight: 600,
                         }}
                       >
-                        {format(new Date(date + "T00:00:00"), "EEE, MMM d")}
+                        {formatDayOfWeek(new Date(date + "T00:00:00"))}
                       </span>
                       {meeting.frontmatter.time && (
                         <span style={{ fontSize: 12, color: "var(--clay-deep)", marginLeft: "auto" }}>

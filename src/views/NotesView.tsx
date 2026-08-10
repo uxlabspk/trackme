@@ -3,7 +3,7 @@ import FileTreeList from "../components/FileTreeList";
 import MarkdownEditor from "../components/MarkdownEditor";
 import Dialog from "../components/Dialog";
 import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFolder, writeFile } from "../lib/bridge";
-import { uniquePath } from "../lib/path";
+import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
 import { FolderPlus, PanelLeftClose, PanelLeftOpen, Trash2 } from "lucide-react";
@@ -13,34 +13,6 @@ interface Props {
   vaultPath: string;
   searchTarget?: string | null;
   onSearchHandled?: () => void;
-}
-
-function slugify(title: string): string {
-  return (
-    title
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || "untitled"
-  );
-}
-
-function sanitizeFolderName(name: string): string {
-  return (
-    name
-      .trim()
-      .replace(/[\\/]+/g, "-")
-      .replace(/\.+/g, "")
-      .replace(/^\.+/, "")
-      .replace(/[^\p{L}\p{N} _-]+/gu, "")
-      .replace(/^-+|-+$/g, "")
-      .trim() || "untitled"
-  );
-}
-
-function parentRelPath(relPath: string): string {
-  const idx = relPath.lastIndexOf("/");
-  return idx <= 0 ? "notes" : relPath.slice(0, idx);
 }
 
 export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: Props) {

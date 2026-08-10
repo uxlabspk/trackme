@@ -1,4 +1,5 @@
 import type { VaultEntry } from "./types";
+import { flattenFiles, slugify as sharedSlugify } from "./path";
 
 const WIKILINK_RE = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
 
@@ -18,19 +19,6 @@ export interface GraphData {
   links: GraphLink[];
 }
 
-function flattenFiles(entries: VaultEntry[]): { relPath: string; name: string }[] {
-  const out: { relPath: string; name: string }[] = [];
-  for (const e of entries) {
-    if (e.is_dir) out.push(...flattenFiles(e.children));
-    else if (e.name.endsWith(".md")) out.push({ relPath: e.rel_path, name: e.name });
-  }
-  return out;
-}
-
-function slugify(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
 export function extractWikilinks(body: string): string[] {
   const links: string[] = [];
   let m: RegExpExecArray | null;
@@ -44,11 +32,11 @@ export function buildGraph(
   noteTree: VaultEntry[],
   contents: Map<string, string>,
 ): GraphData {
-  const files = flattenFiles(noteTree);
+  const files = flattenFiles(noteTree).filter((f) => f.name.endsWith(".md")).map((f) => ({ relPath: f.rel_path, name: f.name }));
 
   const slugToFile = new Map<string, string>();
   for (const f of files) {
-    const slug = slugify(f.name.replace(/\.md$/, ""));
+    const slug = sharedSlugify(f.name.replace(/\.md$/, ""));
     slugToFile.set(slug, f.relPath);
   }
 
@@ -65,7 +53,7 @@ export function buildGraph(
     const raw = contents.get(f.relPath) ?? "";
     const targets = extractWikilinks(raw);
     for (const t of targets) {
-      const slug = slugify(t);
+      const slug = sharedSlugify(t);
       const targetPath = slugToFile.get(slug);
       if (targetPath && targetPath !== f.relPath) {
         links.push({ source: f.relPath, target: targetPath });

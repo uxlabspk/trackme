@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Search, FileText, CalendarDays, CheckSquare, FolderKanban } from "lucide-react";
 import { joinPath, listVaultFolder, readFile } from "../lib/bridge";
 import { parseFrontmatter } from "../lib/frontmatter";
+import { flattenFiles } from "../lib/path";
 import type { VaultEntry } from "../lib/types";
 
 interface SearchResult {
@@ -16,10 +17,6 @@ interface Props {
   onClose: () => void;
   vaultPath: string;
   onNavigate: (tab: "notes" | "meetings" | "todos" | "projects", relPath: string) => void;
-}
-
-function flattenFiles(entries: VaultEntry[]): VaultEntry[] {
-  return entries.flatMap((e) => (e.is_dir ? flattenFiles(e.children) : [e]));
 }
 
 function tabForPath(relPath: string): "notes" | "meetings" | "todos" | "projects" | null {

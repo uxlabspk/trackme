@@ -3,27 +3,14 @@ import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
 import { COLORS, FONTS, SHAPES, nextId, type CanvasData, type CanvasNode, type CanvasShape } from "../lib/canvas";
 import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFolder, writeFile } from "../lib/bridge";
-import { uniquePath } from "../lib/path";
+import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/path";
 import type { VaultEntry } from "../lib/types";
-import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link, PanelLeftClose, PanelLeftOpen, FolderPlus, Plus } from "lucide-react";
+import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link, PanelLeftClose, PanelLeftOpen, FolderPlus } from "lucide-react";
 
 interface Props { vaultPath: string; }
 
 const CANVAS_DIR = "canvas";
 const CANVAS_EXT = ".canvas.json";
-
-function slugify(title: string): string {
-  return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "untitled";
-}
-
-function sanitizeFolderName(name: string): string {
-  return name.trim().replace(/[\\/]+/g, "-").replace(/\.+/g, "").replace(/^\.+/, "").replace(/[^\p{L}\p{N} _-]+/gu, "").replace(/^-+|-+$/g, "").trim() || "untitled";
-}
-
-function parentRelPath(relPath: string): string {
-  const idx = relPath.lastIndexOf("/");
-  return idx <= 0 ? CANVAS_DIR : relPath.slice(0, idx);
-}
 
 function nodeCenter(n: CanvasNode) {
   return { x: n.x + n.w / 2, y: n.y + n.h / 2 };
@@ -130,14 +117,6 @@ export default function CanvasView({ vaultPath }: Props) {
     await trashFolder(vaultPath, relPath);
     if (currentFolder === relPath || currentFolder.startsWith(`${relPath}/`)) setCurrentFolder(CANVAS_DIR);
     if (selected && (selected === relPath || selected.startsWith(`${relPath}/`))) setSelected(null);
-    await refreshTree();
-  }
-
-  async function handleDeleteCanvas() {
-    if (!selected) return;
-    if (!window.confirm("Move this canvas to trash?")) return;
-    await trashFile(vaultPath, selected);
-    setSelected(null);
     await refreshTree();
   }
 
@@ -305,8 +284,6 @@ export default function CanvasView({ vaultPath }: Props) {
   const btnActive: React.CSSProperties = { ...btnBase, background: "var(--moss)", color: "#fff", borderColor: "var(--moss)" };
   const selectBase: React.CSSProperties = { height: 28, borderRadius: 4, border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", color: "var(--ink)", fontSize: 12, fontFamily: "var(--font-mono)", padding: "0 6px", cursor: "pointer", outline: "none" };
 
-  const kbdStyle: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 22, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-soft)", background: "var(--paper-raised)", border: "1px solid var(--hairline-strong)", borderRadius: 4, padding: "0 6px", lineHeight: 1 };
-
   return (
     <div style={{ display: "flex", height: "100%" }}>
       {/* sidebar */}
@@ -336,7 +313,7 @@ export default function CanvasView({ vaultPath }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderBottom: "1px solid var(--hairline)", background: "var(--paper)", flexShrink: 0, flexWrap: "wrap" }}>
             {!sidebarOpen && <button onClick={() => setSidebarOpen(true)} title="Show sidebar" style={{ ...btnBase, width: 28, height: 28, flexShrink: 0 }}><PanelLeftOpen size={14} /></button>}
             <input value={canvasTitle} onChange={(e) => setCanvasTitle(e.target.value)} placeholder="Untitled"
-              onBlur={async () => { if (!canvasTitle.trim() || !selected) return; const slug = slugify(canvasTitle.trim()); const dir = parentRelPath(selected); const newPath = await uniquePath(vaultPath, `${dir}/${slug}${CANVAS_EXT}`); if (newPath !== selected) { await writeFile(joinPath(vaultPath, newPath), JSON.stringify(canvasData, null, 2)); await trashFile(vaultPath, selected); await refreshTree(); setSelected(newPath); } }}
+              onBlur={async () => { if (!canvasTitle.trim() || !selected) return;     const slug = slugify(canvasTitle.trim()); const dir = parentRelPath(selected, CANVAS_DIR); const newPath = await uniquePath(vaultPath, `${dir}/${slug}${CANVAS_EXT}`); if (newPath !== selected) { await writeFile(joinPath(vaultPath, newPath), JSON.stringify(canvasData, null, 2)); await trashFile(vaultPath, selected); await refreshTree(); setSelected(newPath); } }}
               style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 600, border: "none", outline: "none", background: "transparent", width: 160, color: "var(--ink)" }} />
             <div style={{ width: 1, height: 20, background: "var(--hairline)", margin: "0 4px" }} />
             {[{ id: "select" as const, icon: <MousePointer size={14} />, tip: "Select" }, { id: "connect" as const, icon: <Link size={14} />, tip: "Connect" }].map((t) => (

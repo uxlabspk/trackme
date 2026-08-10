@@ -65,14 +65,6 @@ export interface TodoFile {
   preambleBody: string;
 }
 
-export interface MeetingOccurrence {
-  date: string; // YYYY-MM-DD
-  relPath: string;
-  title: string;
-  time?: string;
-  durationMinutes?: number;
-}
-
 export interface ProjectTask {
   id: string;
   title: string;

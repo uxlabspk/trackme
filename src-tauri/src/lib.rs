@@ -112,49 +112,17 @@ fn rename_file(from: String, to: String) -> Result<(), String> {
     fs::rename(&from, &to).map_err(|e| e.to_string())
 }
 
-#[tauri::command]
-fn trash_file(vault_root: String, rel_path: String) -> Result<(), String> {
-    let source = PathBuf::from(&vault_root).join(&rel_path);
+// ponytail: shared trash logic, replaces duplicated trash_file/trash_folder
+fn trash_entry(vault_root: &str, rel_path: &str, is_dir: bool) -> Result<(), String> {
+    let source = PathBuf::from(vault_root).join(rel_path);
     if !source.exists() {
-        return Err("file not found".into());
-    }
-
-    let tdir = trash_dir(&vault_root);
-    fs::create_dir_all(&tdir).map_err(|e| e.to_string())?;
-
-    let safe_name = rel_path.replace('/', "__").replace('\\', "__");
-    let timestamp = chrono::Utc::now().format("%Y%m%d%H%M%S").to_string();
-    let trash_name = format!("{}_{}", timestamp, safe_name);
-    let dest = tdir.join(&trash_name);
-
-    fs::rename(&source, &dest).map_err(|e| e.to_string())?;
-
-    let mut entries = read_trash_metadata(&vault_root);
-    entries.push(TrashEntry {
-        trash_path: trash_name,
-        original_path: rel_path.clone(),
-        name: Path::new(&rel_path)
-            .file_name()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string(),
-        is_dir: false,
-        deleted_at: chrono::Utc::now().to_rfc3339(),
-    });
-    write_trash_metadata(&vault_root, &entries)
-}
-
-#[tauri::command]
-fn trash_folder(vault_root: String, rel_path: String) -> Result<(), String> {
-    let source = PathBuf::from(&vault_root).join(&rel_path);
-    if !source.exists() {
-        return Err("folder not found".into());
+        return Err(if is_dir { "folder not found" } else { "file not found" }.into());
     }
     if rel_path.contains("..") {
         return Err("invalid path".into());
     }
 
-    let tdir = trash_dir(&vault_root);
+    let tdir = trash_dir(vault_root);
     fs::create_dir_all(&tdir).map_err(|e| e.to_string())?;
 
     let safe_name = rel_path.replace('/', "__").replace('\\', "__");
@@ -164,19 +132,29 @@ fn trash_folder(vault_root: String, rel_path: String) -> Result<(), String> {
 
     fs::rename(&source, &dest).map_err(|e| e.to_string())?;
 
-    let mut entries = read_trash_metadata(&vault_root);
+    let mut entries = read_trash_metadata(vault_root);
     entries.push(TrashEntry {
         trash_path: trash_name,
-        original_path: rel_path.clone(),
-        name: Path::new(&rel_path)
+        original_path: rel_path.to_string(),
+        name: Path::new(rel_path)
             .file_name()
             .unwrap_or_default()
             .to_string_lossy()
             .to_string(),
-        is_dir: true,
+        is_dir,
         deleted_at: chrono::Utc::now().to_rfc3339(),
     });
-    write_trash_metadata(&vault_root, &entries)
+    write_trash_metadata(vault_root, &entries)
+}
+
+#[tauri::command]
+fn trash_file(vault_root: String, rel_path: String) -> Result<(), String> {
+    trash_entry(&vault_root, &rel_path, false)
+}
+
+#[tauri::command]
+fn trash_folder(vault_root: String, rel_path: String) -> Result<(), String> {
+    trash_entry(&vault_root, &rel_path, true)
 }
 
 #[tauri::command]

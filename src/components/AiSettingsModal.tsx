@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { AiConfig, AiProvider } from "../lib/types";
-import { PROVIDER_LABELS, providerNeedsKey, getProviderDefaults } from "../lib/aiConfig";
+import { PROVIDER_LABELS, providerNeedsKey, getProviderDefaults, getAllDefaultModels } from "../lib/aiConfig";
 import Dialog from "./Dialog";
 
 interface Props {
@@ -25,7 +25,8 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
     if (p === "lmstudio" || p === "ollama") {
       setApiKey("");
     }
-    if (!model || PROVIDER_DEFAULTS_HAVE.includes(model)) {
+    // Reset model if it was a default from the previous provider
+    if (!model || getAllDefaultModels().includes(model)) {
       setModel(defaults.model);
     }
   }
@@ -135,8 +136,6 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
     </Dialog>
   );
 }
-
-const PROVIDER_DEFAULTS_HAVE = ["gpt-4o", "claude-sonnet-4-20250514", ""];
 
 const labelStyle: React.CSSProperties = {
   display: "block",

@@ -40,22 +40,18 @@ export default function TrashView({ vaultPath }: Props) {
 
   function formatDeletedAt(iso: string): string {
     try {
-      const d = new Date(iso);
-      return d.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      return new Intl.DateTimeFormat("en", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      }).format(new Date(iso));
     } catch {
       return iso;
     }
   }
 
   function originLabel(originalPath: string): string {
-    const parts = originalPath.split("/");
-    return parts.length > 1 ? `/${parts.slice(0, -1).join("/")}` : "/";
+    const idx = originalPath.lastIndexOf("/");
+    return idx <= 0 ? "/" : originalPath.slice(0, idx);
   }
 
   return (
