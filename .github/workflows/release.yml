@@ -108,7 +108,14 @@ jobs:
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            libasound2-dev
+
+      # ---- Install Windows build dependencies ----
+      # whisper-rs-sys needs CMake to compile whisper.cpp
+      - name: Install CMake (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
 
       # ---- Install Rust ----
       # Explicit toolchain install (rather than relying on tauri-action
