@@ -11,7 +11,7 @@ interface Props {
   onSave: (config: AiConfig) => void;
 }
 
-const PROVIDERS: AiProvider[] = ["lmstudio", "ollama", "openai", "anthropic", "openrouter"];
+const PROVIDERS: AiProvider[] = ["lmstudio", "ollama", "llamacpp", "openai", "anthropic", "openrouter"];
 
 export default function AiSettingsModal({ open, config, onClose, onSave }: Props) {
   const [provider, setProvider] = useState<AiProvider>(config.provider);
@@ -56,7 +56,7 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
     setProvider(p);
     const defaults = getProviderDefaults(p);
     setBaseUrl(defaults.baseUrl);
-    if (p === "lmstudio" || p === "ollama") {
+    if (p === "lmstudio" || p === "ollama" || p === "llamacpp") {
       setApiKey("");
     }
     // Reset model if it was a default from the previous provider
@@ -141,6 +141,7 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
             {provider === "openai" && "e.g. gpt-4o, gpt-4o-mini, gpt-3.5-turbo"}
             {provider === "anthropic" && "e.g. claude-sonnet-4-20250514, claude-3-haiku-20240307"}
             {provider === "openrouter" && "Browse models at openrouter.ai/models"}
+            {provider === "llamacpp" && "llama.cpp server exposes OpenAI-compatible API. Load a model with --model first."}
           </div>
         </div>
 

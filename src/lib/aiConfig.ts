@@ -8,6 +8,7 @@ const PROVIDER_DEFAULTS: Record<AiProvider, { model: string; baseUrl: string; ne
   anthropic: { model: "claude-sonnet-4-20250514", baseUrl: "https://api.anthropic.com", needsKey: true },
   ollama: { model: "", baseUrl: "http://localhost:11434/v1", needsKey: false },
   openrouter: { model: "", baseUrl: "https://openrouter.ai/api/v1", needsKey: true },
+  llamacpp: { model: "", baseUrl: "http://localhost:8080/v1", needsKey: false },
 };
 
 export const PROVIDER_LABELS: Record<AiProvider, string> = {
@@ -16,6 +17,7 @@ export const PROVIDER_LABELS: Record<AiProvider, string> = {
   anthropic: "Anthropic",
   ollama: "Ollama",
   openrouter: "OpenRouter",
+  llamacpp: "llama.cpp",
 };
 
 export function getProviderDefaults(provider: AiProvider) {

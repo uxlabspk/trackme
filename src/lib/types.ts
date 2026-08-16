@@ -98,7 +98,7 @@ export interface TrashEntry {
 
 /* ── AI Chat types ── */
 
-export type AiProvider = "lmstudio" | "openai" | "anthropic" | "ollama" | "openrouter";
+export type AiProvider = "lmstudio" | "openai" | "anthropic" | "ollama" | "openrouter" | "llamacpp";
 
 export interface AiConfig {
   provider: AiProvider;
