@@ -45,6 +45,7 @@ export default function CanvasView({ vaultPath }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentFolder, setCurrentFolder] = useState(CANVAS_DIR);
   const [newOpen, setNewOpen] = useState(false);
+  const [confirmDeleteFolder, setConfirmDeleteFolder] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [folderOpen, setFolderOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
@@ -112,8 +113,14 @@ export default function CanvasView({ vaultPath }: Props) {
     setCurrentFolder(relPath);
   }
 
-  async function handleDeleteFolder(relPath: string) {
-    if (!window.confirm(`Move folder "${relPath}" and all its canvases to trash?`)) return;
+  function handleDeleteFolder(relPath: string) {
+    setConfirmDeleteFolder(relPath);
+  }
+
+  async function doConfirmDeleteFolder() {
+    if (!confirmDeleteFolder) return;
+    const relPath = confirmDeleteFolder;
+    setConfirmDeleteFolder(null);
     await trashFolder(vaultPath, relPath);
     if (currentFolder === relPath || currentFolder.startsWith(`${relPath}/`)) setCurrentFolder(CANVAS_DIR);
     if (selected && (selected === relPath || selected.startsWith(`${relPath}/`))) setSelected(null);
@@ -383,6 +390,21 @@ export default function CanvasView({ vaultPath }: Props) {
         <input autoFocus value={folderName} onChange={(e) => setFolderName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submitNewFolder(); }} placeholder="Folder name"
           style={{ width: "100%", fontFamily: "var(--font-display)", fontSize: 15, padding: "9px 11px", border: "1px solid var(--hairline-strong)", borderRadius: "var(--radius-sm)", outline: "none", boxSizing: "border-box", background: "var(--paper-raised)", color: "var(--ink)" }} />
         <div style={{ marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--ink-soft)" }}>in /{currentFolder}</div>
+      </Dialog>
+
+      {/* delete folder confirm */}
+      <Dialog
+        open={confirmDeleteFolder !== null}
+        title="Move folder to trash?"
+        onClose={() => setConfirmDeleteFolder(null)}
+        footer={<>
+          <button onClick={() => setConfirmDeleteFolder(null)} style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", padding: "7px 14px", fontSize: 13, cursor: "pointer", color: "var(--ink-soft)" }}>Cancel</button>
+          <button onClick={doConfirmDeleteFolder} style={{ border: "none", background: "#ff3b30", color: "#fff", borderRadius: "var(--radius-sm)", padding: "7px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>Move to trash</button>
+        </>}
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          &ldquo;{confirmDeleteFolder}&rdquo; and all its canvases will be moved to trash.
+        </p>
       </Dialog>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import FileTreeList from "../components/FileTreeList";
 import RecurrenceEditor from "../components/RecurrenceEditor";
 import Dialog from "../components/Dialog";
@@ -73,6 +73,8 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
   const [newTitle, setNewTitle] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [occurrencesOpen, setOccurrencesOpen] = useState(true);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const saveTimerRef = useRef<number | null>(null);
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "meetings"));
@@ -131,11 +133,14 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
       .catch(() => setOccurrences([]));
   }, [meeting?.frontmatter.recurrence]);
 
-  async function persist(next: MeetingFile) {
+  function persist(next: MeetingFile) {
     setDirty(true);
-    const raw = serializeFrontmatter(next.frontmatter, next.body);
-    await writeFile(joinPath(vaultPath, next.relPath), raw);
-    setDirty(false);
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(async () => {
+      const raw = serializeFrontmatter(next.frontmatter, next.body);
+      await writeFile(joinPath(vaultPath, next.relPath), raw);
+      setDirty(false);
+    }, 500);
   }
 
   async function createMeeting(title: string) {
@@ -164,9 +169,14 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
     await createMeeting(title);
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!meeting) return;
-    if (!window.confirm(`Move "${meeting.frontmatter.title ?? meeting.relPath}" to trash?`)) return;
+    setConfirmDeleteOpen(true);
+  }
+
+  async function doConfirmDelete() {
+    if (!meeting) return;
+    setConfirmDeleteOpen(false);
     await trashFile(vaultPath, meeting.relPath);
     setSelected(null);
     await refreshTree();
@@ -475,28 +485,6 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                 </div>
               </div>
 
-              {/* {meeting.frontmatter.link?.trim() && (
-                <button
-                  onClick={() => window.open(meeting.frontmatter.link!.trim(), "_blank")}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    border: "none",
-                    background: "var(--clay)",
-                    color: "#fff",
-                    borderRadius: "var(--radius-sm)",
-                    padding: "9px 16px",
-                    fontSize: 13.5,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    marginBottom: 24,
-                  }}
-                >
-                  Launch meeting
-                </button>
-              )} */}
-
               <div
                 style={{
                   border: "1px solid var(--hairline)",
@@ -694,6 +682,49 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
             color: "var(--ink)",
           }}
         />
+      </Dialog>
+
+      <Dialog
+        open={confirmDeleteOpen}
+        title="Move to trash?"
+        onClose={() => setConfirmDeleteOpen(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setConfirmDeleteOpen(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={doConfirmDelete}
+              style={{
+                border: "none",
+                background: "#ff3b30",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Move to trash
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          &ldquo;{meeting?.frontmatter.title ?? meeting?.relPath}&rdquo; will be moved to trash.
+        </p>
       </Dialog>
     </div>
   );

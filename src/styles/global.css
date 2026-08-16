@@ -121,9 +121,12 @@ button {
   border-radius: var(--radius-sm);
 }
 
-.trash-row:hover {
-  background: var(--paper-raised);
-}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes mic-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+@keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
+@keyframes save-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -151,6 +154,90 @@ button {
 }
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* ── File tree ── */
+.ft-file-btn {
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, font-weight 0.12s ease;
+}
+.ft-file-btn:hover {
+  background: var(--paper-raised) !important;
+}
+.ft-file-active {
+  position: relative;
+}
+
+.ft-folder-btn {
+  transition: color 0.12s ease, font-weight 0.12s ease;
+}
+.ft-folder-row {
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.ft-folder-row:hover {
+  background: var(--paper-raised);
+}
+
+.ft-delete-btn {
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.ft-folder-row:hover .ft-delete-btn {
+  opacity: 0.5;
+}
+.ft-delete-btn:hover {
+  opacity: 1 !important;
+  color: var(--danger) !important;
+}
+
+.ft-empty {
+  animation: fade-in 0.3s ease;
+}
+
+/* ── Notes view ── */
+.note-empty-state {
+  animation: fade-in 0.35s ease;
+}
+
+.note-save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.2s ease;
+}
+.note-save-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transition: background 0.25s ease;
+}
+.note-save-dot[data-dirty="true"] {
+  background: var(--accent-warning);
+  animation: save-pulse 1.2s ease-in-out infinite;
+}
+.note-save-dot[data-dirty="false"] {
+  background: var(--moss);
+}
+
+.note-delete-btn {
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.note-delete-btn:hover {
+  background: #cc3328 !important;
+  box-shadow: 0 2px 8px rgba(204, 51, 40, 0.25);
+}
+
+.note-header-btn {
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.note-header-btn:hover {
+  background: var(--paper-raised);
+  border-color: var(--hairline-strong);
+  color: var(--ink);
+}
+
+/* ── Trash ── */
+.trash-row:hover {
+  background: var(--paper-raised);
 }
 
 /* AI chat markdown */

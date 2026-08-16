@@ -9,10 +9,20 @@ interface Props {
   vaultPath: string;
 }
 
-const MOSS = "#4a5d45";
-const INK_SOFT = "#565f57";
-const HAIRLINE = "#dad5c8";
-const PAPER = "#f7f5f0";
+function getThemeColor(varName: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+function getCachedColor(varName: string): string {
+  if (!(window as any).__colorCache) (window as any).__colorCache = {};
+  const cache = (window as any).__colorCache as Record<string, string>;
+  if (!cache[varName]) cache[varName] = getThemeColor(varName);
+  return cache[varName];
+}
+
+function color(name: string): string {
+  return getCachedColor(`--${name}`);
+}
 
 function flattenFiles(entries: VaultEntry[]): VaultEntry[] {
   const out: VaultEntry[] = [];
@@ -83,13 +93,14 @@ export default function GraphView({ vaultPath }: Props) {
 
       // pill shadow
       if (isHovered) {
-        ctx.shadowColor = "rgba(74, 93, 69, 0.35)";
+        const moss = color("moss");
+        ctx.shadowColor = `${moss}59`;
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 2;
       }
 
       // pill background
-      ctx.fillStyle = isHovered ? MOSS : PAPER;
+      ctx.fillStyle = isHovered ? color("moss") : color("paper");
       ctx.beginPath();
       ctx.roundRect(x, y, w, h, r);
       ctx.fill();
@@ -99,7 +110,7 @@ export default function GraphView({ vaultPath }: Props) {
       ctx.shadowOffsetY = 0;
 
       // pill border
-      ctx.strokeStyle = isHovered ? MOSS : HAIRLINE;
+      ctx.strokeStyle = isHovered ? color("moss") : color("hairline");
       ctx.lineWidth = isHovered ? 1.5 : 1;
       ctx.beginPath();
       ctx.roundRect(x, y, w, h, r);
@@ -108,7 +119,7 @@ export default function GraphView({ vaultPath }: Props) {
       // label
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = isHovered ? "#fff" : INK_SOFT;
+      ctx.fillStyle = isHovered ? "#fff" : color("ink-soft");
       ctx.fillText(label, (node.x ?? 0), (node.y ?? 0) + 0.5);
     },
     [hoveredNode],
@@ -124,7 +135,7 @@ export default function GraphView({ vaultPath }: Props) {
       const isHighlighted =
         link.source.id === hoveredNode || link.target.id === hoveredNode;
 
-      ctx.strokeStyle = isHighlighted ? MOSS : HAIRLINE;
+      ctx.strokeStyle = isHighlighted ? color("moss") : color("hairline");
       ctx.globalAlpha = isHighlighted ? 0.9 : 0.35;
       ctx.lineWidth = isHighlighted ? 1.5 : 0.8;
 
@@ -150,7 +161,7 @@ export default function GraphView({ vaultPath }: Props) {
         ay - arrowLen * Math.sin(angle + Math.PI / 6),
       );
       ctx.closePath();
-      ctx.fillStyle = isHighlighted ? MOSS : HAIRLINE;
+      ctx.fillStyle = isHighlighted ? color("moss") : color("hairline");
       ctx.fill();
 
       ctx.globalAlpha = 1;
@@ -296,7 +307,7 @@ export default function GraphView({ vaultPath }: Props) {
           warmupTicks={40}
           width={typeof window !== "undefined" ? window.innerWidth - 208 : 800}
           height={typeof window !== "undefined" ? window.innerHeight - 90 : 600}
-          backgroundColor="var(--paper)"
+          backgroundColor={color("paper")}
         />
 
         {/* zoom controls */}

@@ -27,6 +27,8 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
   const [currentFolder, setCurrentFolder] = useState("notes");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const saveTimer = useRef<number | null>(null);
+  const [confirmDeleteNote, setConfirmDeleteNote] = useState(false);
+  const [confirmDeleteFolder, setConfirmDeleteFolder] = useState<string | null>(null);
 
   const refreshTree = useCallback(async () => {
     const entries = await listVaultFolder(vaultPath, "notes");
@@ -123,13 +125,14 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
     setCurrentFolder(relPath);
   }
 
-  async function handleDeleteFolder(relPath: string) {
-    if (
-      !window.confirm(
-        `Move folder "${relPath}" and all its notes to trash?`,
-      )
-    )
-      return;
+  function handleDeleteFolder(relPath: string) {
+    setConfirmDeleteFolder(relPath);
+  }
+
+  async function doConfirmDeleteFolder() {
+    if (!confirmDeleteFolder) return;
+    const relPath = confirmDeleteFolder;
+    setConfirmDeleteFolder(null);
     await trashFolder(vaultPath, relPath);
     if (currentFolder === relPath || currentFolder.startsWith(`${relPath}/`)) {
       setCurrentFolder("notes");
@@ -140,10 +143,14 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
     await refreshTree();
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!note) return;
-    if (!window.confirm(`Move "${note.frontmatter.title ?? note.relPath}" to trash?`))
-      return;
+    setConfirmDeleteNote(true);
+  }
+
+  async function doConfirmDeleteNote() {
+    if (!note) return;
+    setConfirmDeleteNote(false);
     await trashFile(vaultPath, note.relPath);
     setSelected(null);
     await refreshTree();
@@ -194,6 +201,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
             <button
               onClick={() => setSidebarOpen(false)}
               title="Hide sidebar"
+              className="note-header-btn"
               style={{
                 border: "1px solid var(--hairline-strong)",
                 background: "var(--paper-raised)",
@@ -212,6 +220,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
             <button
               onClick={openFolderDialog}
               title="New folder"
+              className="note-header-btn"
               style={{
                 border: "1px solid var(--hairline-strong)",
                 background: "var(--paper-raised)",
@@ -230,6 +239,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
             <button
               onClick={openNewDialog}
               title="New note"
+              className="note-header-btn"
               style={{
                 border: "1px solid var(--hairline-strong)",
                 background: "var(--paper-raised)",
@@ -275,6 +285,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
             <button
               onClick={() => setSidebarOpen(true)}
               title="Show sidebar"
+              className="note-header-btn"
               style={{
                 position: "absolute",
                 top: 12,
@@ -294,10 +305,10 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
               <PanelLeftOpen size={14} />
             </button>
             )}
-            <div style={{ fontSize: 14, color: "var(--ink-soft)" }}>
+            <div className="note-empty-state" style={{ fontSize: 14, color: "var(--ink-soft)", animation: "fade-in 0.35s ease" }}>
               Select a note, or create one to get started.
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="note-empty-state" style={{ display: "flex", flexDirection: "column", gap: 10, animation: "fade-in 0.45s ease 0.1s both" }}>
               <div
                 style={{
                   display: "flex",
@@ -339,6 +350,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
               <button
                 onClick={() => setSidebarOpen(true)}
                 title="Show sidebar"
+                className="note-header-btn"
                 style={{
                   border: "1px solid var(--hairline-strong)",
                   background: "var(--paper-raised)",
@@ -380,6 +392,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
                   }}
                 />
                 <div
+                  className="note-save-status"
                   style={{
                     fontFamily: "var(--font-mono)",
                     fontSize: 11.5,
@@ -387,17 +400,19 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
                     marginTop: 2,
                   }}
                 >
+                  <span className="note-save-dot" data-dirty={dirty} />
                   {note.relPath} · {dirty ? "saving…" : "saved"}
                 </div>
               </div>
                 <button
                     onClick={handleDelete}
+                    className="note-delete-btn"
                     style={{
                         display: "flex",
                         alignItems: "center",
                         gap: 6,
                         border: "none",
-                        background: "#ff3b30",
+                        background: "var(--danger)",
                         color: "#fff",
                         fontSize: 13,
                         fontWeight: 500,
@@ -568,6 +583,92 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
         >
           in /{currentFolder}
         </div>
+      </Dialog>
+
+      <Dialog
+        open={confirmDeleteNote}
+        title="Move to trash?"
+        onClose={() => setConfirmDeleteNote(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setConfirmDeleteNote(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={doConfirmDeleteNote}
+              style={{
+                border: "none",
+                background: "#ff3b30",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Move to trash
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          &ldquo;{note?.frontmatter.title ?? note?.relPath}&rdquo; will be moved to trash.
+        </p>
+      </Dialog>
+
+      <Dialog
+        open={confirmDeleteFolder !== null}
+        title="Move folder to trash?"
+        onClose={() => setConfirmDeleteFolder(null)}
+        footer={
+          <>
+            <button
+              onClick={() => setConfirmDeleteFolder(null)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={doConfirmDeleteFolder}
+              style={{
+                border: "none",
+                background: "#ff3b30",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Move to trash
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          &ldquo;{confirmDeleteFolder}&rdquo; and all its notes will be moved to trash.
+        </p>
       </Dialog>
     </div>
   );

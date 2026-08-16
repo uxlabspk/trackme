@@ -15,6 +15,7 @@ interface Props {
 export default function TrashView({ vaultPath }: Props) {
   const [items, setItems] = useState<TrashEntry[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<TrashEntry | null>(null);
+  const [confirmEmptyAll, setConfirmEmptyAll] = useState(false);
 
   const refresh = useCallback(async () => {
     const entries = await listTrash(vaultPath);
@@ -35,6 +36,14 @@ export default function TrashView({ vaultPath }: Props) {
   async function handlePermanentDelete(item: TrashEntry) {
     await permanentDeleteTrash(vaultPath, item.trash_path);
     setConfirmDelete(null);
+    await refresh();
+  }
+
+  async function handleEmptyAll() {
+    for (const item of items) {
+      await permanentDeleteTrash(vaultPath, item.trash_path);
+    }
+    setConfirmEmptyAll(false);
     await refresh();
   }
 
@@ -90,6 +99,24 @@ export default function TrashView({ vaultPath }: Props) {
               : `${items.length} item${items.length === 1 ? "" : "s"} — items are permanently deleted on app close`}
           </div>
         </div>
+        {items.length > 0 && (
+          <button
+            onClick={() => setConfirmEmptyAll(true)}
+            style={{
+              border: "none",
+              background: "none",
+              color: "var(--danger)",
+              fontSize: 12.5,
+              fontWeight: 500,
+              cursor: "pointer",
+              padding: "6px 12px",
+              borderRadius: "var(--radius-sm)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Empty All
+          </button>
+        )}
       </header>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 28px" }}>
@@ -238,6 +265,49 @@ export default function TrashView({ vaultPath }: Props) {
       >
         <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
           &ldquo;{confirmDelete?.name}&rdquo; will be permanently removed. This cannot be undone.
+        </p>
+      </Dialog>
+
+      <Dialog
+        open={confirmEmptyAll}
+        title="Empty all trash?"
+        onClose={() => setConfirmEmptyAll(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setConfirmEmptyAll(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleEmptyAll}
+              style={{
+                border: "none",
+                background: "#ff3b30",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Delete forever
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          All {items.length} item{items.length === 1 ? "" : "s"} will be permanently removed. This cannot be undone.
         </p>
       </Dialog>
     </div>

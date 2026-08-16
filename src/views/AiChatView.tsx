@@ -8,6 +8,7 @@ import { loadAiConfig, saveAiConfig, isAiConfigured } from "../lib/aiConfig";
 import { sendChatMessageStream, buildVaultContext, getSystemPrompt, VAULT_TOOLS, type StreamCallbacks } from "../lib/aiChat";
 import { generateSessionId, getLastSessionId, setLastSessionId, saveSessionTo, loadSession, listSessions, deleteSession, deriveSessionTitle } from "../lib/aiHistory";
 import AiSettingsModal from "../components/AiSettingsModal";
+import Dialog from "../components/Dialog";
 import { startListening, stopListening, isAvailable, installModel, listModels } from "tauri-plugin-stt-api";
 import { listen } from "@tauri-apps/api/event";
 
@@ -30,6 +31,7 @@ export default function AiChatView({ vaultPath }: Props) {
   const [contextLoading, setContextLoading] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(true);
   const [recording, setRecording] = useState(false);
+  const [confirmDeleteSession, setConfirmDeleteSession] = useState<string | null>(null);
   const unlistenResultRef = useRef<(() => void) | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -135,15 +137,20 @@ export default function AiChatView({ vaultPath }: Props) {
   }
 
   // Delete a session
-  async function handleDeleteSession(sessionId: string, e: React.MouseEvent) {
+  function handleDeleteSession(sessionId: string, e: React.MouseEvent) {
     e.stopPropagation();
-    if (!window.confirm("Delete this chat history?")) return;
-    await deleteSession(vaultPath, sessionId);
-    if (currentSessionId === sessionId) {
+    setConfirmDeleteSession(sessionId);
+  }
+
+  async function doConfirmDeleteSession() {
+    if (!confirmDeleteSession) return;
+    await deleteSession(vaultPath, confirmDeleteSession);
+    if (currentSessionId === confirmDeleteSession) {
       setCurrentSessionId(null);
       setMessages([]);
       setLastSessionId(null);
     }
+    setConfirmDeleteSession(null);
     refreshSessions();
   }
 
@@ -654,7 +661,48 @@ export default function AiChatView({ vaultPath }: Props) {
             onSave={handleSaveConfig}
         />
 
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes mic-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
+        <Dialog
+            open={confirmDeleteSession !== null}
+            title="Delete chat history?"
+            onClose={() => setConfirmDeleteSession(null)}
+            footer={
+              <>
+                <button
+                    onClick={() => setConfirmDeleteSession(null)}
+                    style={{
+                      border: "1px solid var(--hairline-strong)",
+                      background: "var(--paper-raised)",
+                      borderRadius: "var(--radius-sm)",
+                      padding: "7px 14px",
+                      fontSize: 13,
+                      cursor: "pointer",
+                      color: "var(--ink-soft)",
+                    }}
+                >
+                  Cancel
+                </button>
+                <button
+                    onClick={doConfirmDeleteSession}
+                    style={{
+                      border: "none",
+                      background: "#ff3b30",
+                      color: "#fff",
+                      borderRadius: "var(--radius-sm)",
+                      padding: "7px 14px",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                    }}
+                >
+                  Delete
+                </button>
+              </>
+            }
+        >
+          <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+            This chat history will be permanently deleted.
+          </p>
+        </Dialog>
       </div>
   );
 }

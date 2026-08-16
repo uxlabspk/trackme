@@ -10,7 +10,7 @@ import {
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import { parseTodoFile, serializeTodoFile, toggleTodoItem } from "../lib/todos";
 import type { MeetingFrontmatter, TodoFile } from "../lib/types";
-import { CopyIcon } from "lucide-react";
+import { CopyIcon, Check } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -36,6 +36,7 @@ interface OpenTodo {
 export default function AgendaView({ vaultPath, onNavigate }: Props) {
   const [meetings, setMeetings] = useState<TodayMeeting[] | null>(null);
   const [todoFiles, setTodoFiles] = useState<Record<string, TodoFile> | null>(null);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const today = new Intl.DateTimeFormat("sv-SE").format(new Date()); // YYYY-MM-DD
 
   const loadMeetings = useCallback(async () => {
@@ -178,7 +179,10 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
           </div>
 
           {meetings === null ? (
-            <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>Loading…</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--ink-soft)", fontSize: 14 }}>
+              <div style={{ width: 20, height: 20, border: "2px solid var(--hairline)", borderTopColor: "var(--moss)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              Loading…
+            </div>
           ) : meetings.length === 0 ? (
             <p style={{ color: "var(--ink-soft)", fontSize: 14, fontStyle: "italic" }}>
               Nothing on the calendar today.
@@ -283,8 +287,8 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(m.link!.trim());
-                            // Optional: Show a toast or feedback that the link was copied
-                            console.log("Link copied to clipboard!");
+                            setCopiedLink(m.relPath);
+                            setTimeout(() => setCopiedLink(null), 1500);
                           } catch (err) {
                             console.error("Failed to copy link:", err);
                           }
@@ -292,7 +296,7 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
                         style={{
                           marginLeft: m.durationMinutes ? 12 : "auto",
                           border: "none",
-                          background: "var(--clay)",
+                          background: copiedLink === m.relPath ? "var(--moss)" : "var(--clay)",
                           color: "#fff",
                           borderRadius: "var(--radius-sm)",
                           padding: "6px 12px",
@@ -302,11 +306,11 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
                           flexShrink: 0,
                           display: "flex",
                           alignItems: "center",
-                          gap: 6
+                          gap: 6,
+                          transition: "background 0.15s",
                         }}
                       >
-                        <CopyIcon size={14} />
-                        Copy Link
+                        {copiedLink === m.relPath ? <><Check size={14} /> Copied</> : <><CopyIcon size={14} /> Copy Link</>}
                       </button>
                     )}
 
@@ -347,7 +351,10 @@ export default function AgendaView({ vaultPath, onNavigate }: Props) {
           </div>
 
           {todos === null ? (
-            <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>Loading…</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--ink-soft)", fontSize: 14 }}>
+              <div style={{ width: 20, height: 20, border: "2px solid var(--hairline)", borderTopColor: "var(--slate)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              Loading…
+            </div>
           ) : todos.length === 0 ? (
             <p style={{ color: "var(--ink-soft)", fontSize: 14, fontStyle: "italic" }}>
               Everything's checked off.

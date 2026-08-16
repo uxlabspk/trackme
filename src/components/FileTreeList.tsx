@@ -24,14 +24,7 @@ export default function FileTreeList({
 }: Props) {
   if (entries.length === 0 && depth === 0) {
     return (
-      <div
-        style={{
-          padding: "16px 14px",
-          fontSize: 13,
-          color: "var(--ink-soft)",
-          fontStyle: "italic",
-        }}
-      >
+      <div className="ft-empty" style={{ padding: "16px 14px", fontSize: 13, color: "var(--ink-soft)", fontStyle: "italic" }}>
         {emptyLabel}
       </div>
     );
@@ -44,6 +37,7 @@ export default function FileTreeList({
           {entry.is_dir ? (
             <>
               <div
+                className="ft-folder-row"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -60,6 +54,7 @@ export default function FileTreeList({
               >
                 <button
                   onClick={() => onSelectFolder?.(entry.rel_path)}
+                  className="ft-folder-btn"
                   style={{
                     flex: 1,
                     textAlign: "left",
@@ -82,6 +77,7 @@ export default function FileTreeList({
                   <button
                     onClick={() => onDeleteFolder(entry.rel_path)}
                     title="Delete folder"
+                    className="ft-delete-btn"
                     style={{
                       border: "none",
                       background: "transparent",
@@ -109,6 +105,7 @@ export default function FileTreeList({
           ) : (
             <button
               onClick={() => onSelect(entry.rel_path)}
+              className={`ft-file-btn${selectedRelPath === entry.rel_path ? " ft-file-active" : ""}`}
               style={{
                 display: "block",
                 width: "100%",

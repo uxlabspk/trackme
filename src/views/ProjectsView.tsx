@@ -45,6 +45,10 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
+  const [confirmDeleteColumn, setConfirmDeleteColumn] = useState<string | null>(null);
+  const [newColumnOpen, setNewColumnOpen] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
 
   const dragMoved = useRef(false);
 
@@ -122,9 +126,14 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
     await createProject(name);
   }
 
-  async function handleDeleteProject() {
+  function handleDeleteProject() {
     if (!project) return;
-    if (!window.confirm(`Move project "${project.frontmatter.name ?? project.relPath}" to trash?`)) return;
+    setConfirmDeleteProject(true);
+  }
+
+  async function doConfirmDeleteProject() {
+    if (!project) return;
+    setConfirmDeleteProject(false);
     await trashFile(vaultPath, project.relPath);
     setSelected(null);
     await refreshTree();
@@ -177,16 +186,13 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
 
   function handleDeleteColumn(col: string) {
     if (!project) return;
-    const count = (project.frontmatter.tasks ?? []).filter((t) => t.status === col).length;
-    if (
-      !window.confirm(
-        `Delete column "${col}"? Its ${count} card${count === 1 ? "" : "s"} will move to "${
-          (project.frontmatter.columns ?? DEFAULT_COLUMNS)[0]
-        }".`,
-      )
-    )
-      return;
-    persist(removeColumn(project, col));
+    setConfirmDeleteColumn(col);
+  }
+
+  function doConfirmDeleteColumn() {
+    if (!project || !confirmDeleteColumn) return;
+    persist(removeColumn(project, confirmDeleteColumn));
+    setConfirmDeleteColumn(null);
   }
 
   const columns = project?.frontmatter.columns ?? DEFAULT_COLUMNS;
@@ -642,10 +648,7 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
               })}
 
               <button
-                onClick={() => {
-                  const name = window.prompt("New column name");
-                  if (name && project) persist(addColumn(project, name));
-                }}
+                onClick={() => { setNewColumnName(""); setNewColumnOpen(true); }}
                 title="Add column"
                 style={{
                   width: 44,
@@ -842,6 +845,166 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
             </select>
           </div>
         </div>
+      </Dialog>
+
+      <Dialog
+        open={confirmDeleteProject}
+        title="Move project to trash?"
+        onClose={() => setConfirmDeleteProject(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setConfirmDeleteProject(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={doConfirmDeleteProject}
+              style={{
+                border: "none",
+                background: "#ff3b30",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Move to trash
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          &ldquo;{project?.frontmatter.name ?? project?.relPath}&rdquo; will be moved to trash.
+        </p>
+      </Dialog>
+
+      <Dialog
+        open={confirmDeleteColumn !== null}
+        title="Delete column?"
+        onClose={() => setConfirmDeleteColumn(null)}
+        footer={
+          <>
+            <button
+              onClick={() => setConfirmDeleteColumn(null)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={doConfirmDeleteColumn}
+              style={{
+                border: "none",
+                background: "#ff3b30",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Delete column
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          {(() => {
+            const count = (project?.frontmatter.tasks ?? []).filter((t) => t.status === confirmDeleteColumn).length;
+            const firstCol = (project?.frontmatter.columns ?? DEFAULT_COLUMNS)[0];
+            return <>Delete &ldquo;{confirmDeleteColumn}&rdquo;? Its {count} card{count === 1 ? "" : "s"} will move to &ldquo;{firstCol}&rdquo;.</>;
+          })()}
+        </p>
+      </Dialog>
+
+      <Dialog
+        open={newColumnOpen}
+        title="New column"
+        onClose={() => setNewColumnOpen(false)}
+        footer={
+          <>
+            <button
+              onClick={() => setNewColumnOpen(false)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (newColumnName.trim() && project) {
+                  persist(addColumn(project, newColumnName.trim()));
+                  setNewColumnOpen(false);
+                }
+              }}
+              disabled={!newColumnName.trim()}
+              style={{
+                border: "none",
+                background: "var(--moss)",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: newColumnName.trim() ? "pointer" : "not-allowed",
+                opacity: newColumnName.trim() ? 1 : 0.5,
+              }}
+            >
+              Create
+            </button>
+          </>
+        }
+      >
+        <input
+          autoFocus
+          value={newColumnName}
+          onChange={(e) => setNewColumnName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && newColumnName.trim() && project) {
+              persist(addColumn(project, newColumnName.trim()));
+              setNewColumnOpen(false);
+            }
+          }}
+          placeholder="Column name"
+          style={{
+            width: "100%",
+            fontFamily: "var(--font-display)",
+            fontSize: 15,
+            padding: "9px 11px",
+            border: "1px solid var(--hairline-strong)",
+            borderRadius: "var(--radius-sm)",
+            outline: "none",
+            boxSizing: "border-box",
+            background: "var(--paper-raised)",
+            color: "var(--ink)",
+          }}
+        />
       </Dialog>
     </div>
   );
