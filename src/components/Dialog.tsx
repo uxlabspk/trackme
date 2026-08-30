@@ -6,16 +6,15 @@ interface DialogProps {
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  maxWidth?: number;
 }
 
-export default function Dialog({ open, title, onClose, children, footer }: DialogProps) {
+export default function Dialog({ open, title, onClose, children, footer, maxWidth = 420 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -28,11 +27,14 @@ export default function Dialog({ open, title, onClose, children, footer }: Dialo
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(20, 24, 20, 0.45)",
+        background: "rgba(15, 18, 15, 0.5)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1000,
+        backdropFilter: "blur(2px)",
+        WebkitBackdropFilter: "blur(2px)",
+        animation: "fade-in-fast 0.12s ease",
       }}
     >
       <div
@@ -43,36 +45,40 @@ export default function Dialog({ open, title, onClose, children, footer }: Dialo
         style={{
           background: "var(--paper-raised)",
           borderRadius: "var(--radius-lg)",
-          width: "min(420px, calc(100vw - 32px))",
-          padding: "20px 22px",
-          boxShadow: "0 18px 50px rgba(0, 0, 0, 0.3)",
+          width: `min(${maxWidth}px, calc(100vw - 32px))`,
+          padding: "22px 24px",
+          boxShadow: "var(--shadow-lg)",
           fontFamily: "var(--font-display)",
           border: "1px solid var(--hairline)",
+          animation: "scale-in 0.15s ease",
         }}
       >
         <h3
           style={{
-            margin: "0 0 14px",
-            fontSize: 18,
+            margin: "0 0 16px",
+            fontSize: 17,
             fontWeight: 600,
             color: "var(--ink)",
+            letterSpacing: "-0.01em",
           }}
         >
           {title}
         </h3>
         <div style={{ color: "var(--ink)", fontSize: 14 }}>{children}</div>
-        {footer ? (
+        {footer && (
           <div
             style={{
               display: "flex",
               justifyContent: "flex-end",
-              gap: 10,
+              gap: 8,
               marginTop: 20,
+              paddingTop: 16,
+              borderTop: "1px solid var(--hairline)",
             }}
           >
             {footer}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
