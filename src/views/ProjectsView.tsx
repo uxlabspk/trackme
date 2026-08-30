@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
 import { joinPath, listVaultFolder, readFile, trashFile, writeFile } from "../lib/bridge";
@@ -18,15 +19,16 @@ import {
   updateTaskTitle,
 } from "../lib/projects";
 import type { ProjectFile, ProjectTask, VaultEntry } from "../lib/types";
-import { GripVertical, PanelLeftClose, PanelLeftOpen, Plus, Trash2, X } from "lucide-react";
+import { GripVertical, Plus, Trash2, X } from "lucide-react";
 
 interface Props {
   vaultPath: string;
   searchTarget?: string | null;
   onSearchHandled?: () => void;
+  sidebarSlot: HTMLDivElement | null;
 }
 
-export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled }: Props) {
+export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [project, setProject] = useState<ProjectFile | null>(null);
@@ -44,7 +46,6 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
   const [editing, setEditing] = useState<ProjectTask | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
   const [confirmDeleteColumn, setConfirmDeleteColumn] = useState<string | null>(null);
   const [newColumnOpen, setNewColumnOpen] = useState(false);
@@ -199,34 +200,24 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
   const tasks = project?.frontmatter.tasks ?? [];
 
   return (
-    <div style={{ display: "flex", height: "100%" }}>
-      <aside
-        style={{
-          width: sidebarOpen ? 240 : 0,
-          flexShrink: 0,
-          borderRight: sidebarOpen ? "1px solid var(--hairline)" : "none",
-          overflowY: "auto",
-          overflowX: "hidden",
-          transition: "width 0.15s ease",
-          paddingBottom: 12,
-        }}
-      >
-        {sidebarOpen && (<>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "16px 14px 8px",
-          }}
-        >
-          <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
-            PROJECTS
-          </h2>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              title="Hide sidebar"
+    <div style={{ height: "100%" }}>
+      {sidebarSlot && createPortal(
+        <>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 14px 8px",
+            }}
+          >
+            <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
+              PROJECTS
+            </h2>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+              onClick={openNewDialog}
+              title="New project"
               style={{
                 border: "1px solid var(--hairline-strong)",
                 background: "var(--paper-raised)",
@@ -234,42 +225,25 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
                 width: 24,
                 height: 24,
                 cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--ink-soft)",
+                fontSize: 15,
+                color: "var(--moss-deep)",
               }}
             >
-              <PanelLeftClose size={14} />
-            </button>
-            <button
-            onClick={openNewDialog}
-            title="New project"
-            style={{
-              border: "1px solid var(--hairline-strong)",
-              background: "var(--paper-raised)",
-              borderRadius: "var(--radius-sm)",
-              width: 24,
-              height: 24,
-              cursor: "pointer",
-              fontSize: 15,
-              color: "var(--moss-deep)",
-            }}
-          >
-            +
-            </button>
+              +
+              </button>
+            </div>
           </div>
-        </div>
-        <FileTreeList
-          entries={tree}
-          selectedRelPath={selected}
-          onSelect={setSelected}
-          emptyLabel="No projects yet"
-        />
-        </> )}
-      </aside>
+          <FileTreeList
+            entries={tree}
+            selectedRelPath={selected}
+            onSelect={setSelected}
+            emptyLabel="No projects yet"
+          />
+        </>,
+        sidebarSlot
+      )}
 
-      <section style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <section style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {!project ? (
           <div
             style={{
@@ -282,29 +256,6 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
               position: "relative",
             }}
           >
-            {!sidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              title="Show sidebar"
-              style={{
-                position: "absolute",
-                top: 12,
-                left: 12,
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 28,
-                height: 28,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--ink-soft)",
-              }}
-            >
-              <PanelLeftOpen size={14} />
-            </button>
-            )}
             Select a project, or create one to start a board.
           </div>
         ) : (
@@ -318,28 +269,6 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled 
                 gap: 10,
               }}
             >
-              {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                title="Show sidebar"
-                style={{
-                  border: "1px solid var(--hairline-strong)",
-                  background: "var(--paper-raised)",
-                  borderRadius: "var(--radius-sm)",
-                  width: 28,
-                  height: 28,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--ink-soft)",
-                  flexShrink: 0,
-                  marginTop: 4,
-                }}
-              >
-                <PanelLeftOpen size={14} />
-              </button>
-              )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <input
                   value={project.frontmatter.name ?? ""}

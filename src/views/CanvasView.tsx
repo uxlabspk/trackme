@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import FileTreeList from "../components/FileTreeList";
 import Dialog from "../components/Dialog";
 import { COLORS, FONTS, SHAPES, nextId, type CanvasData, type CanvasNode, type CanvasShape } from "../lib/canvas";
 import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFolder, writeFile } from "../lib/bridge";
 import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/path";
 import type { VaultEntry } from "../lib/types";
-import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link, PanelLeftClose, PanelLeftOpen, FolderPlus } from "lucide-react";
+import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link, FolderPlus } from "lucide-react";
 
-interface Props { vaultPath: string; }
+interface Props { vaultPath: string; sidebarSlot: HTMLDivElement | null; }
 
 const CANVAS_DIR = "canvas";
 const CANVAS_EXT = ".canvas.json";
@@ -30,7 +31,7 @@ const SHAPE_ICONS: Record<string, React.ReactNode> = { text: <Type size={14} />,
 type Handle = "nw" | "ne" | "sw" | "se";
 const HANDLE = 8;
 
-export default function CanvasView({ vaultPath }: Props) {
+export default function CanvasView({ vaultPath, sidebarSlot }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [canvasData, setCanvasData] = useState<CanvasData>({ nodes: [], edges: [] });
@@ -42,7 +43,6 @@ export default function CanvasView({ vaultPath }: Props) {
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentFolder, setCurrentFolder] = useState(CANVAS_DIR);
   const [newOpen, setNewOpen] = useState(false);
   const [confirmDeleteFolder, setConfirmDeleteFolder] = useState<string | null>(null);
@@ -292,33 +292,30 @@ export default function CanvasView({ vaultPath }: Props) {
   const selectBase: React.CSSProperties = { height: 28, borderRadius: 4, border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", color: "var(--ink)", fontSize: 12, fontFamily: "var(--font-mono)", padding: "0 6px", cursor: "pointer", outline: "none" };
 
   return (
-    <div style={{ display: "flex", height: "100%" }}>
-      {/* sidebar */}
-      <aside style={{ width: sidebarOpen ? 240 : 0, flexShrink: 0, borderRight: sidebarOpen ? "1px solid var(--hairline)" : "none", overflowY: "auto", overflowX: "hidden", transition: "width 0.15s ease", paddingBottom: 12 }}>
-        {sidebarOpen && (<>
+    <div style={{ height: "100%" }}>
+      {sidebarSlot && createPortal(
+        <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 14px 8px" }}>
             <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>CANVAS</h2>
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setSidebarOpen(false)} title="Hide sidebar" style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-soft)" }}><PanelLeftClose size={14} /></button>
               <button onClick={() => { setFolderName(""); setFolderOpen(true); }} title="New folder" style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--moss)" }}><FolderPlus size={14} /></button>
               <button onClick={() => { setNewTitle(""); setNewOpen(true); }} title="New canvas" style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", width: 24, height: 24, cursor: "pointer", fontSize: 15, lineHeight: 1, color: "var(--moss)" }}>+</button>
             </div>
           </div>
           <FileTreeList entries={tree} selectedRelPath={selected} onSelect={setSelected} selectedFolderRelPath={currentFolder} onSelectFolder={setCurrentFolder} onDeleteFolder={handleDeleteFolder} emptyLabel="No canvases yet — click + to add one" />
-        </>)}
-      </aside>
+        </>,
+        sidebarSlot
+      )}
 
       {/* main */}
-      <section style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
         {!selected ? (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, position: "relative" }}>
-            {!sidebarOpen && <button onClick={() => setSidebarOpen(true)} title="Show sidebar" style={{ position: "absolute", top: 12, left: 12, border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", width: 28, height: 28, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-soft)" }}><PanelLeftOpen size={14} /></button>}
             <div style={{ fontSize: 14, color: "var(--ink-soft)" }}>Select a canvas, or create one to get started.</div>
           </div>
         ) : (<>
           {/* canvas toolbar */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderBottom: "1px solid var(--hairline)", background: "var(--paper)", flexShrink: 0, flexWrap: "wrap" }}>
-            {!sidebarOpen && <button onClick={() => setSidebarOpen(true)} title="Show sidebar" style={{ ...btnBase, width: 28, height: 28, flexShrink: 0 }}><PanelLeftOpen size={14} /></button>}
             <input value={canvasTitle} onChange={(e) => setCanvasTitle(e.target.value)} placeholder="Untitled"
               onBlur={async () => { if (!canvasTitle.trim() || !selected) return;     const slug = slugify(canvasTitle.trim()); const dir = parentRelPath(selected, CANVAS_DIR); const newPath = await uniquePath(vaultPath, `${dir}/${slug}${CANVAS_EXT}`); if (newPath !== selected) { await writeFile(joinPath(vaultPath, newPath), JSON.stringify(canvasData, null, 2)); await trashFile(vaultPath, selected); await refreshTree(); setSelected(newPath); } }}
               style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 600, border: "none", outline: "none", background: "transparent", width: 160, color: "var(--ink)" }} />
@@ -370,7 +367,7 @@ export default function CanvasView({ vaultPath }: Props) {
             </svg>
           </div>
         </>)}
-      </section>
+      </div>
 
       {/* new canvas dialog */}
       <Dialog open={newOpen} title="New canvas" onClose={() => setNewOpen(false)} footer={<>

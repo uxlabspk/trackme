@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import FileTreeList from "../components/FileTreeList";
 import MarkdownEditor from "../components/MarkdownEditor";
 import Dialog from "../components/Dialog";
@@ -6,16 +7,17 @@ import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFold
 import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
-import { FolderPlus, PanelLeftClose, PanelLeftOpen, Trash2 } from "lucide-react";
+import { FolderPlus, Trash2 } from "lucide-react";
 import "../styles/milkdown.css";
 
 interface Props {
   vaultPath: string;
   searchTarget?: string | null;
   onSearchHandled?: () => void;
+  sidebarSlot: HTMLDivElement | null;
 }
 
-export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: Props) {
+export default function NotesView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState<NoteFile | null>(null);
@@ -25,7 +27,6 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
   const [folderOpen, setFolderOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [currentFolder, setCurrentFolder] = useState("notes");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const saveTimer = useRef<number | null>(null);
   const [confirmDeleteNote, setConfirmDeleteNote] = useState(false);
   const [confirmDeleteFolder, setConfirmDeleteFolder] = useState<string | null>(null);
@@ -173,102 +174,74 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
   };
 
   return (
-    <div style={{ display: "flex", height: "100%" }}>
-      <aside
-        style={{
-          width: sidebarOpen ? 240 : 0,
-          flexShrink: 0,
-          borderRight: sidebarOpen ? "1px solid var(--hairline)" : "none",
-          overflowY: "auto",
-          overflowX: "hidden",
-          transition: "width 0.15s ease",
-          paddingBottom: 12,
-        }}
-      >
-        {sidebarOpen && (<>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "16px 14px 8px",
-          }}
-        >
-          <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
-            NOTES
-          </h2>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              title="Hide sidebar"
-              className="note-header-btn"
-              style={{
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 24,
-                height: 24,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--ink-soft)",
-              }}
-            >
-              <PanelLeftClose size={14} />
-            </button>
-            <button
-              onClick={openFolderDialog}
-              title="New folder"
-              className="note-header-btn"
-              style={{
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 24,
-                height: 24,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--moss)",
-              }}
-            >
-              <FolderPlus size={14} />
-            </button>
-            <button
-              onClick={openNewDialog}
-              title="New note"
-              className="note-header-btn"
-              style={{
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 24,
-                height: 24,
-                cursor: "pointer",
-                fontSize: 15,
-                lineHeight: 1,
-                color: "var(--moss)",
-              }}
-            >
-              +
-            </button>
+    <div style={{ height: "100%" }}>
+      {sidebarSlot && createPortal(
+        <div style={{ paddingBottom: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 14px 8px",
+            }}
+          >
+            <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
+              NOTES
+            </h2>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                onClick={openFolderDialog}
+                title="New folder"
+                className="note-header-btn"
+                style={{
+                  border: "1px solid var(--hairline-strong)",
+                  background: "var(--paper-raised)",
+                  borderRadius: "var(--radius-sm)",
+                  width: 24,
+                  height: 24,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--moss)",
+                }}
+              >
+                <FolderPlus size={14} />
+              </button>
+              <button
+                onClick={openNewDialog}
+                title="New note"
+                className="note-header-btn"
+                style={{
+                  border: "1px solid var(--hairline-strong)",
+                  background: "var(--paper-raised)",
+                  borderRadius: "var(--radius-sm)",
+                  width: 24,
+                  height: 24,
+                  cursor: "pointer",
+                  fontSize: 15,
+                  lineHeight: 1,
+                  color: "var(--moss)",
+                }}
+              >
+                +
+              </button>
+            </div>
           </div>
-        </div>
-        <FileTreeList
-          entries={tree}
-          selectedRelPath={selected}
-          onSelect={setSelected}
-          selectedFolderRelPath={currentFolder}
-          onSelectFolder={setCurrentFolder}
-          onDeleteFolder={handleDeleteFolder}
-          emptyLabel="No notes yet — click + to add one"
-        />
-        </> )}
-      </aside>
+          <FileTreeList
+            entries={tree}
+            selectedRelPath={selected}
+            onSelect={setSelected}
+            selectedFolderRelPath={currentFolder}
+            onSelectFolder={setCurrentFolder}
+            onDeleteFolder={handleDeleteFolder}
+            emptyLabel="No notes yet — click + to add one"
+          />
+        </div>,
+        sidebarSlot
+      )}
 
-      <section style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      <section style={{ height: "100%", minWidth: 0, display: "flex", flexDirection: "column" }}>
         {!note ? (
           <div
             style={{
@@ -281,30 +254,6 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
               position: "relative",
             }}
           >
-            {!sidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              title="Show sidebar"
-              className="note-header-btn"
-              style={{
-                position: "absolute",
-                top: 12,
-                left: 12,
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 28,
-                height: 28,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--ink-soft)",
-              }}
-            >
-              <PanelLeftOpen size={14} />
-            </button>
-            )}
             <div className="note-empty-state" style={{ fontSize: 14, color: "var(--ink-soft)", animation: "fade-in 0.35s ease" }}>
               Select a note, or create one to get started.
             </div>
@@ -346,28 +295,6 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled }: 
                 borderBottom: "1px solid var(--hairline)",
               }}
             >
-              {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                title="Show sidebar"
-                className="note-header-btn"
-                style={{
-                  border: "1px solid var(--hairline-strong)",
-                  background: "var(--paper-raised)",
-                  borderRadius: "var(--radius-sm)",
-                  width: 28,
-                  height: 28,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--ink-soft)",
-                  flexShrink: 0,
-                }}
-              >
-                <PanelLeftOpen size={14} />
-              </button>
-              )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <input
                   value={note.frontmatter.title ?? ""}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -12,9 +13,10 @@ import Dialog from "../components/Dialog";
 
 interface Props {
   vaultPath: string;
+  sidebarSlot: HTMLDivElement | null;
 }
 
-export default function AiChatView({ vaultPath }: Props) {
+export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
   const [config, setConfig] = useState<AiConfig>(loadAiConfig);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -27,7 +29,6 @@ export default function AiChatView({ vaultPath }: Props) {
   const [streamingToolCalls, setStreamingToolCalls] = useState<AiToolCall[]>([]);
   const [vaultContext, setVaultContext] = useState<string>("");
   const [contextLoading, setContextLoading] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(true);
   const [confirmDeleteSession, setConfirmDeleteSession] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -294,108 +295,95 @@ export default function AiChatView({ vaultPath }: Props) {
   const configured = isAiConfigured(config);
 
   return (
-      <div style={{ display: "flex", height: "100%" }}>
-        {/* History sidebar */}
-        <aside
-            style={{
-              width: historyOpen ? 220 : 0,
-              flexShrink: 0,
-              borderRight: historyOpen ? "1px solid var(--hairline)" : "none",
-              overflowY: "auto",
-              overflowX: "hidden",
-              transition: "width 0.15s ease",
-              display: "flex",
-              flexDirection: "column",
-            }}
-        >
-          {historyOpen && (
-              <>
-                <div style={{ padding: "14px 12px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <h2 style={{ fontSize: 12, fontWeight: 700, margin: 0, color: "var(--ink-soft)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                    History
-                  </h2>
-                  <button
-                      onClick={handleNewChat}
-                      title="New chat"
-                      style={{
-                        border: "1px solid var(--hairline-strong)",
-                        background: "var(--paper-raised)",
-                        borderRadius: "var(--radius-sm)",
-                        width: 22,
-                        height: 22,
-                        cursor: "pointer",
-                        fontSize: 14,
-                        color: "var(--accent-info)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                  >
-                    <Plus size={12} />
-                  </button>
-                </div>
+      <div style={{ height: "100%" }}>
+        {sidebarSlot && createPortal(
+            <>
+              <div style={{ padding: "14px 12px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h2 style={{ fontSize: 12, fontWeight: 700, margin: 0, color: "var(--ink-soft)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  History
+                </h2>
+                <button
+                    onClick={handleNewChat}
+                    title="New chat"
+                    style={{
+                      border: "1px solid var(--hairline-strong)",
+                      background: "var(--paper-raised)",
+                      borderRadius: "var(--radius-sm)",
+                      width: 22,
+                      height: 22,
+                      cursor: "pointer",
+                      fontSize: 14,
+                      color: "var(--accent-info)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
 
-                <div style={{ flex: 1, overflowY: "auto", padding: "0 6px 12px" }}>
-                  {sessions.length === 0 && (
-                      <div style={{ fontSize: 12, color: "var(--ink-soft)", padding: "12px 6px", fontStyle: "italic" }}>
-                        No chat history yet
-                      </div>
-                  )}
-                  {sessions.map((s) => (
-                      <button
-                          key={s.id}
-                          onClick={() => handleLoadSession(s.id)}
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 8,
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "8px 8px",
-                            borderRadius: "var(--radius-sm)",
-                            border: "none",
-                            background: currentSessionId === s.id ? "var(--accent-info)" : "transparent",
-                            color: currentSessionId === s.id ? "#fff" : "var(--ink)",
-                            cursor: "pointer",
-                            fontSize: 12.5,
-                            fontFamily: "var(--font-body)",
-                            lineHeight: 1.4,
-                            marginBottom: 2,
-                            transition: "background 0.1s",
-                          }}
-                          onMouseEnter={(e) => {
-                            if (currentSessionId !== s.id) e.currentTarget.style.background = "var(--paper-raised)";
-                          }}
-                          onMouseLeave={(e) => {
-                            if (currentSessionId !== s.id) e.currentTarget.style.background = "transparent";
-                          }}
-                      >
-                        <MessageSquare size={13} style={{ flexShrink: 0, marginTop: 2, opacity: 0.6 }} />
-                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "0 6px 12px" }}>
+                {sessions.length === 0 && (
+                    <div style={{ fontSize: 12, color: "var(--ink-soft)", padding: "12px 6px", fontStyle: "italic" }}>
+                      No chat history yet
+                    </div>
+                )}
+                {sessions.map((s) => (
+                    <button
+                        key={s.id}
+                        onClick={() => handleLoadSession(s.id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 8,
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "8px 8px",
+                          borderRadius: "var(--radius-sm)",
+                          border: "none",
+                          background: currentSessionId === s.id ? "var(--accent-info)" : "transparent",
+                          color: currentSessionId === s.id ? "#fff" : "var(--ink)",
+                          cursor: "pointer",
+                          fontSize: 12.5,
+                          fontFamily: "var(--font-body)",
+                          lineHeight: 1.4,
+                          marginBottom: 2,
+                          transition: "background 0.1s",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (currentSessionId !== s.id) e.currentTarget.style.background = "var(--paper-raised)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (currentSessionId !== s.id) e.currentTarget.style.background = "transparent";
+                        }}
+                    >
+                      <MessageSquare size={13} style={{ flexShrink: 0, marginTop: 2, opacity: 0.6 }} />
+                      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {s.title}
                   </span>
-                        <span
-                            onClick={(e) => handleDeleteSession(s.id, e)}
-                            title="Delete chat"
-                            style={{
-                              flexShrink: 0,
-                              opacity: 0.4,
-                              cursor: "pointer",
-                              padding: 2,
-                              display: "flex",
-                            }}
-                        >
+                      <span
+                          onClick={(e) => handleDeleteSession(s.id, e)}
+                          title="Delete chat"
+                          style={{
+                            flexShrink: 0,
+                            opacity: 0.4,
+                            cursor: "pointer",
+                            padding: 2,
+                            display: "flex",
+                          }}
+                      >
                     <Trash2 size={11} />
                   </span>
-                      </button>
-                  ))}
-                </div>
-              </>
-          )}
-        </aside>
+                    </button>
+                ))}
+              </div>
+            </>,
+            sidebarSlot
+        )}
 
         {/* Main chat area */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <div style={{ height: "100%", minWidth: 0, display: "flex", flexDirection: "column" }}>
           {/* Header */}
           <header
               style={{
@@ -407,13 +395,6 @@ export default function AiChatView({ vaultPath }: Props) {
               }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button
-                  onClick={() => setHistoryOpen(!historyOpen)}
-                  title={historyOpen ? "Hide history" : "Show history"}
-                  style={headerBtnStyle}
-              >
-                <MessageSquare size={14} />
-              </button>
               <Bot size={18} style={{ color: "var(--accent-info)" }} />
               <span style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
               AI Assistant

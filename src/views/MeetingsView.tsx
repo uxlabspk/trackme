@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import FileTreeList from "../components/FileTreeList";
 import RecurrenceEditor from "../components/RecurrenceEditor";
 import Dialog from "../components/Dialog";
@@ -13,12 +14,13 @@ import {
 import { uniquePath, slugify } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import type { MeetingFile, MeetingFrontmatter, Recurrence, VaultEntry } from "../lib/types";
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Trash2 } from "lucide-react";
+import { PanelRightClose, PanelRightOpen, Trash2 } from "lucide-react";
 
 interface Props {
   vaultPath: string;
   searchTarget?: string | null;
   onSearchHandled?: () => void;
+  sidebarSlot: HTMLDivElement | null;
 }
 
 function isValidRecurrence(r: unknown): r is Recurrence {
@@ -63,7 +65,7 @@ function defaultRecurrence(): Recurrence {
   };
 }
 
-export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled }: Props) {
+export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [meeting, setMeeting] = useState<MeetingFile | null>(null);
@@ -71,7 +73,6 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
   const [dirty, setDirty] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [occurrencesOpen, setOccurrencesOpen] = useState(true);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const saveTimerRef = useRef<number | null>(null);
@@ -191,33 +192,23 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
 
   return (
     <div style={{ display: "flex", height: "100%" }}>
-      <aside
-        style={{
-          width: sidebarOpen ? 240 : 0,
-          flexShrink: 0,
-          borderRight: sidebarOpen ? "1px solid var(--hairline)" : "none",
-          overflowY: "auto",
-          overflowX: "hidden",
-          transition: "width 0.15s ease",
-          paddingBottom: 12,
-        }}
-      >
-        {sidebarOpen && (<>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "16px 14px 8px",
-          }}
-        >
-          <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
-            MEETINGS
-          </h2>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              title="Hide sidebar"
+      {sidebarSlot && createPortal(
+        <>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 14px 8px",
+            }}
+          >
+            <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
+              MEETINGS
+            </h2>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+              onClick={openNewDialog}
+              title="New meeting series"
               style={{
                 border: "1px solid var(--hairline-strong)",
                 background: "var(--paper-raised)",
@@ -225,40 +216,23 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                 width: 24,
                 height: 24,
                 cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--ink-soft)",
+                fontSize: 15,
+                color: "var(--clay-deep)",
               }}
             >
-              <PanelLeftClose size={14} />
+              +
             </button>
-            <button
-            onClick={openNewDialog}
-            title="New meeting series"
-            style={{
-              border: "1px solid var(--hairline-strong)",
-              background: "var(--paper-raised)",
-              borderRadius: "var(--radius-sm)",
-              width: 24,
-              height: 24,
-              cursor: "pointer",
-              fontSize: 15,
-              color: "var(--clay-deep)",
-            }}
-          >
-            +
-          </button>
-        </div>
-        </div>
-        <FileTreeList
-          entries={tree}
-          selectedRelPath={selected}
-          onSelect={setSelected}
-          emptyLabel="No meeting series yet"
-        />
-        </> )}
-      </aside>
+          </div>
+          </div>
+          <FileTreeList
+            entries={tree}
+            selectedRelPath={selected}
+            onSelect={setSelected}
+            emptyLabel="No meeting series yet"
+          />
+        </>,
+        sidebarSlot
+      )}
 
       <section style={{ flex: 1, minWidth: 0, display: "flex", overflow: "hidden" }}>
         {!meeting ? (
@@ -273,29 +247,6 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
               position: "relative",
             }}
           >
-            {!sidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              title="Show sidebar"
-              style={{
-                position: "absolute",
-                top: 12,
-                left: 12,
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 28,
-                height: 28,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--ink-soft)",
-              }}
-            >
-              <PanelLeftOpen size={14} />
-            </button>
-            )}
             Select a meeting series, or create one.
           </div>
         ) : (
@@ -308,28 +259,6 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled 
                   gap: 10,
                 }}
               >
-                {!sidebarOpen && (
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  title="Show sidebar"
-                  style={{
-                    border: "1px solid var(--hairline-strong)",
-                    background: "var(--paper-raised)",
-                    borderRadius: "var(--radius-sm)",
-                    width: 28,
-                    height: 28,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--ink-soft)",
-                    flexShrink: 0,
-                    marginTop: 4,
-                  }}
-                >
-                  <PanelLeftOpen size={14} />
-                </button>
-                )}
                 <input
                   value={meeting.frontmatter.title ?? ""}
                   onChange={(e) => updateField("title", e.target.value)}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import {
   Calendar, FileText, CalendarDays, CheckSquare, FolderKanban,
   Sun, Moon, Trash2, Search, Bot, Network, LayoutGrid, Settings,
@@ -49,6 +49,26 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
   const { theme, toggleTheme } = useTheme();
   const vaultName = vaultPath.split(/[/\\]/).filter(Boolean).pop() ?? "Vault";
 
+  // Each tab that has its own list/tree gets a dedicated, always-mounted
+  // portal target. The view for that tab renders its list into this node;
+  // we just grow/shrink it in place (dropdown/accordion style) depending on
+  // whether its tab is the active one.
+  const [notesSlot, setNotesSlot] = useState<HTMLDivElement | null>(null);
+  const [meetingsSlot, setMeetingsSlot] = useState<HTMLDivElement | null>(null);
+  const [todosSlot, setTodosSlot] = useState<HTMLDivElement | null>(null);
+  const [projectsSlot, setProjectsSlot] = useState<HTMLDivElement | null>(null);
+  const [canvasSlot, setCanvasSlot] = useState<HTMLDivElement | null>(null);
+  const [aiSlot, setAiSlot] = useState<HTMLDivElement | null>(null);
+
+  const listSetters: Partial<Record<Tab, (el: HTMLDivElement | null) => void>> = {
+    notes: setNotesSlot,
+    meetings: setMeetingsSlot,
+    todos: setTodosSlot,
+    projects: setProjectsSlot,
+    canvas: setCanvasSlot,
+    ai: setAiSlot,
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -73,12 +93,41 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
   const mainTabs = TABS.filter((t) => t.group === "main");
   const toolTabs = TABS.filter((t) => t.group === "tools");
 
+  const renderNavItem = (t: TabDef) => {
+    const setter = listSetters[t.id];
+    const active = tab === t.id;
+    return (
+      <Fragment key={t.id}>
+        <button
+          onClick={() => setTab(t.id)}
+          className={`nav-item${active ? " active" : ""}`}
+          style={{ flexShrink: 0 }}
+        >
+          {t.icon}
+          {t.label}
+        </button>
+        {setter && (
+          <div
+            ref={setter}
+            style={{
+              flex: active ? "1 1 auto" : "0 0 0",
+              minHeight: 0,
+              overflowY: active ? "auto" : "hidden",
+              overflowX: "hidden",
+              transition: "flex-grow 0.15s ease",
+            }}
+          />
+        )}
+      </Fragment>
+    );
+  };
+
   return (
     <div style={{ display: "flex", height: "100%", background: "var(--paper)" }}>
       {/* ── Sidebar ── */}
       <nav
         style={{
-          width: 210,
+          width: 240,
           flexShrink: 0,
           borderRight: "1px solid var(--hairline)",
           display: "flex",
@@ -124,7 +173,7 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
         </div>
 
         {/* Search */}
-        <div style={{ padding: "0 10px 8px" }}>
+        <div style={{ padding: "0 10px 8px", flexShrink: 0 }}>
           <button
             onClick={() => setSearchOpen(true)}
             className="search-bar"
@@ -147,51 +196,39 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
           </button>
         </div>
 
-        {/* Main nav */}
-        <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 1 }}>
-          {mainTabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`nav-item${tab === t.id ? " active" : ""}`}
-            >
-              {t.icon}
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {/* Nav + accordion lists (each active tab's list drops down in place) */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            padding: "0 8px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            overflow: "hidden",
+          }}
+        >
+          {mainTabs.map(renderNavItem)}
 
-        {/* Divider + Tools label */}
-        <div style={{ margin: "10px 14px 6px", borderTop: "1px solid var(--hairline)" }} />
-
-        {/* Tools nav */}
-        <div style={{ padding: "0 8px", display: "flex", flexDirection: "column", gap: 1 }}>
+          {/* Divider + Tools label */}
+          <div style={{ margin: "10px 6px 6px", borderTop: "1px solid var(--hairline)", flexShrink: 0 }} />
           <div
             style={{
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: "0.07em",
               color: "var(--ink-soft)",
-              padding: "0 10px 5px",
+              padding: "0 2px 5px",
               textTransform: "uppercase",
               opacity: 0.65,
+              flexShrink: 0,
             }}
           >
             Tools
           </div>
-          {toolTabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`nav-item${tab === t.id ? " active" : ""}`}
-            >
-              {t.icon}
-              {t.label}
-            </button>
-          ))}
-        </div>
 
-        <div style={{ flex: 1 }} />
+          {toolTabs.map(renderNavItem)}
+        </div>
 
         {/* Utility buttons */}
         <div
@@ -201,6 +238,7 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             flexDirection: "column",
             gap: 1,
             borderTop: "1px solid var(--hairline)",
+            flexShrink: 0,
           }}
         >
           <button
@@ -236,15 +274,17 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             vaultPath={vaultPath}
             searchTarget={searchTarget?.tab === "notes" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
+            sidebarSlot={notesSlot}
           />
         )}
         {tab === "graph" && <GraphView vaultPath={vaultPath} />}
-        {tab === "canvas" && <CanvasView vaultPath={vaultPath} />}
+        {tab === "canvas" && <CanvasView vaultPath={vaultPath} sidebarSlot={canvasSlot} />}
         {tab === "meetings" && (
           <MeetingsView
             vaultPath={vaultPath}
             searchTarget={searchTarget?.tab === "meetings" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
+            sidebarSlot={meetingsSlot}
           />
         )}
         {tab === "todos" && (
@@ -252,6 +292,7 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             vaultPath={vaultPath}
             searchTarget={searchTarget?.tab === "todos" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
+            sidebarSlot={todosSlot}
           />
         )}
         {tab === "projects" && (
@@ -259,9 +300,10 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             vaultPath={vaultPath}
             searchTarget={searchTarget?.tab === "projects" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
+            sidebarSlot={projectsSlot}
           />
         )}
-        {tab === "ai" && <AiChatView vaultPath={vaultPath} />}
+        {tab === "ai" && <AiChatView vaultPath={vaultPath} sidebarSlot={aiSlot} />}
         {tab === "trash" && <TrashView vaultPath={vaultPath} />}
       </main>
 
