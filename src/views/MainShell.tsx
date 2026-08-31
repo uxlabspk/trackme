@@ -159,7 +159,7 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
                   aria-label={`Create new folder in ${t.label}`}
                   style={{ fontSize: 13, lineHeight: 1, padding: "0 8px" }}
                 >
-                  ▸
+                  🗁
                 </button>
               )}
               <button
@@ -279,10 +279,7 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             overflow: "hidden",
           }}
         >
-          {mainTabs.map(renderNavItem)}
 
-          {/* Divider + Tools label */}
-          <div style={{ margin: "10px 6px 6px", borderTop: "1px solid var(--hairline)", flexShrink: 0 }} />
           <div
             style={{
               fontSize: 10,
@@ -293,6 +290,28 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
               textTransform: "uppercase",
               opacity: 0.65,
               flexShrink: 0,
+              marginTop: 15,
+              marginBottom: 15,
+            }}
+          >
+            Main
+          </div>
+          {mainTabs.map(renderNavItem)}
+
+          {/* Divider + Tools label */}
+          {/* <div style={{ margin: "10px 6px 6px", borderTop: "1px solid var(--hairline)", flexShrink: 0 }} /> */}
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.07em",
+              color: "var(--ink-soft)",
+              padding: "0 2px 5px",
+              textTransform: "uppercase",
+              opacity: 0.65,
+              flexShrink: 0,
+              marginTop: 15,
+              marginBottom: 15,
             }}
           >
             Tools
