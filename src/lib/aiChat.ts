@@ -1,5 +1,5 @@
 import type { AiConfig, AiToolCall, AiToolDefinition, NoteFrontmatter, MeetingFrontmatter, ProjectFrontmatter, Recurrence } from "./types";
-import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolder } from "./bridge";
+import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolder, webSearch } from "./bridge";
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter";
 import { parseTodoFile, serializeTodoFile, addTodoItem, toggleTodoItem, removeTodoItem } from "./todos";
 import { parseProjectFile, serializeProjectFile, addTask, moveTask, removeTask } from "./projects";
@@ -270,6 +270,17 @@ export const VAULT_TOOLS: AiToolDefinition[] = [
         path: { type: "string", description: "Relative path of the folder to create (e.g. 'notes/projects' or 'notes/daily/journal')" },
       },
       required: ["path"],
+    },
+  },
+  {
+    name: "web_search",
+    description: "Search the web for current information. Use this when the user asks about recent events, news, or anything you need up-to-date information about.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "The search query" },
+      },
+      required: ["query"],
     },
   },
 ];
@@ -639,6 +650,12 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
       return `Created folder at ${args.path}`;
     }
 
+    case "web_search": {
+      const results = await webSearch(args.query as string);
+      if (results.length === 0) return "No results found.";
+      return results.map((r, i) => `${i + 1}. [${r.title}](${r.url})\n${r.snippet}`).join("\n\n");
+    }
+
     default:
       return `Unknown tool: ${name}`;
   }
@@ -852,6 +869,16 @@ When the user asks about their notes, meetings, todos, or projects, use the avai
 - List, read, create, toggle, delete todo items
 - List, read, create, add tasks to, move tasks in, delete projects
 - Create folders to organize items into subcategories
+- Search the web for current information using web_search
+
+### 3. WEB SEARCH MODE (use web_search tool)
+When the user asks about current events, recent news, latest information, or anything you're unsure about because your training data may be outdated, use the web_search tool to find up-to-date information. Examples:
+- "What's the latest news about AI?" → web_search("latest AI news 2026")
+- "What's the current price of Bitcoin?" → web_search("Bitcoin price today")
+- "Tell me about the new iPhone release" → web_search("new iPhone release 2026")
+- Any question where you're unsure about current facts → web_search with a good query
+
+Always search when the user asks about recent events, current prices, latest releases, ongoing situations, or anything time-sensitive. Do NOT guess or make up information about current events.
 
 ## HANDLING CREATION REQUESTS:
 When the user asks you to create, draft, or write something (like a story, essay, plan, letter, etc.), you have two options:

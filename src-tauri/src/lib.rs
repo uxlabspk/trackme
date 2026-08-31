@@ -21,6 +21,13 @@ struct TrashEntry {
     deleted_at: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SearchResult {
+    pub title: String,
+    pub url: String,
+    pub snippet: String,
+}
+
 fn trash_metadata_path(vault_root: &str) -> PathBuf {
     PathBuf::from(vault_root).join(".trackme").join("trash.json")
 }
@@ -203,6 +210,70 @@ fn permanent_delete_trash(vault_root: String, trash_path: String) -> Result<(), 
 }
 
 #[tauri::command]
+async fn web_search(query: String) -> Result<Vec<SearchResult>, String> {
+    let jar = reqwest::cookie::Jar::default();
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+        .cookie_provider(std::sync::Arc::new(jar))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let url = format!(
+        "https://html.duckduckgo.com/html/?q={}",
+        urlencoding::encode(&query)
+    );
+    let resp = client
+        .get(&url)
+        .header("Accept", "text/html,application/xhtml+xml")
+        .header("Accept-Language", "en-US,en;q=0.9")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("Search failed ({})", resp.status()));
+    }
+
+    let html = resp.text().await.map_err(|e| e.to_string())?;
+    let doc = scraper::Html::parse_document(&html);
+
+    let item_sel = scraper::Selector::parse("div.result").map_err(|e| format!("{e}"))?;
+    let link_sel = scraper::Selector::parse("a.result__a").map_err(|e| format!("{e}"))?;
+    let snip_sel = scraper::Selector::parse("a.result__snippet").map_err(|e| format!("{e}"))?;
+
+    let mut results = Vec::new();
+    for item in doc.select(&item_sel) {
+        let a = match item.select(&link_sel).next() {
+            Some(a) => a,
+            None => continue,
+        };
+        let title = a.text().collect::<String>().trim().to_string();
+        let href = a
+            .value()
+            .attr("href")
+            .and_then(|href| href.split("uddg=").nth(1))
+            .and_then(|target| target.split('&').next())
+            .and_then(|target| urlencoding::decode(target).ok())
+            .map(|target| target.into_owned())
+            .unwrap_or_default();
+        let snippet = item
+            .select(&snip_sel)
+            .next()
+            .map(|s| s.text().collect::<String>().trim().to_string())
+            .unwrap_or_default();
+
+        if !href.is_empty() && !title.is_empty() {
+            results.push(SearchResult { title, url: href, snippet });
+        }
+        if results.len() >= 5 {
+            break;
+        }
+    }
+
+    Ok(results)
+}
+
+#[tauri::command]
 fn compute_meeting_occurrences(
     rule_json: String,
     window_start: String,
@@ -228,6 +299,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_http::init())
         .manage(NotificationState::default())
         .invoke_handler(tauri::generate_handler![
             bootstrap_vault,
@@ -246,6 +318,7 @@ pub fn run() {
             restore_trash,
             permanent_delete_trash,
             set_vault_path,
+            web_search,
         ])
         .setup(|app| {
             let show_item =

@@ -32,6 +32,12 @@
     {
       "identifier": "fs:allow-exists",
       "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://html.duckduckgo.com/**" }
+      ]
     }
   ]
 }

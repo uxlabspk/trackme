@@ -295,333 +295,333 @@ export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
   const configured = isAiConfigured(config);
 
   return (
-      <div style={{ height: "100%" }}>
-        {sidebarSlot && createPortal(
-            <>
-              <div style={{ padding: "14px 12px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <h2 style={{ fontSize: 12, fontWeight: 700, margin: 0, color: "var(--ink-soft)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                  History
-                </h2>
-                <button
-                    onClick={handleNewChat}
-                    title="New chat"
-                    style={{
-                      border: "1px solid var(--hairline-strong)",
-                      background: "var(--paper-raised)",
-                      borderRadius: "var(--radius-sm)",
-                      width: 22,
-                      height: 22,
-                      cursor: "pointer",
-                      fontSize: 14,
-                      color: "var(--accent-info)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                >
-                  <Plus size={12} />
-                </button>
-              </div>
-
-              <div style={{ flex: 1, overflowY: "auto", padding: "0 6px 12px" }}>
-                {sessions.length === 0 && (
-                    <div style={{ fontSize: 12, color: "var(--ink-soft)", padding: "12px 6px", fontStyle: "italic" }}>
-                      No chat history yet
-                    </div>
-                )}
-                {sessions.map((s) => (
-                    <button
-                        key={s.id}
-                        onClick={() => handleLoadSession(s.id)}
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: 8,
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "8px 8px",
-                          borderRadius: "var(--radius-sm)",
-                          border: "none",
-                          background: currentSessionId === s.id ? "var(--accent-info)" : "transparent",
-                          color: currentSessionId === s.id ? "#fff" : "var(--ink)",
-                          cursor: "pointer",
-                          fontSize: 12.5,
-                          fontFamily: "var(--font-body)",
-                          lineHeight: 1.4,
-                          marginBottom: 2,
-                          transition: "background 0.1s",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (currentSessionId !== s.id) e.currentTarget.style.background = "var(--paper-raised)";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (currentSessionId !== s.id) e.currentTarget.style.background = "transparent";
-                        }}
-                    >
-                      <MessageSquare size={13} style={{ flexShrink: 0, marginTop: 2, opacity: 0.6 }} />
-                      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {s.title}
-                  </span>
-                      <span
-                          onClick={(e) => handleDeleteSession(s.id, e)}
-                          title="Delete chat"
-                          style={{
-                            flexShrink: 0,
-                            opacity: 0.4,
-                            cursor: "pointer",
-                            padding: 2,
-                            display: "flex",
-                          }}
-                      >
-                    <Trash2 size={11} />
-                  </span>
-                    </button>
-                ))}
-              </div>
-            </>,
-            sidebarSlot
-        )}
-
-        {/* Main chat area */}
-        <div style={{ height: "100%", minWidth: 0, display: "flex", flexDirection: "column" }}>
-          {/* Header */}
-          <header
+    <div style={{ height: "100%" }}>
+      {sidebarSlot && createPortal(
+        <>
+          <div style={{ padding: "14px 12px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 12, fontWeight: 700, margin: 0, color: "var(--ink-soft)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              History
+            </h2>
+            <button
+              onClick={handleNewChat}
+              title="New chat"
               style={{
-                padding: "12px 24px",
-                borderBottom: "1px solid var(--hairline)",
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                width: 22,
+                height: 22,
+                cursor: "pointer",
+                fontSize: 14,
+                color: "var(--accent-info)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "center",
               }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Bot size={18} style={{ color: "var(--accent-info)" }} />
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 6px 12px" }}>
+            {sessions.length === 0 && (
+              <div style={{ fontSize: 12, color: "var(--ink-soft)", padding: "12px 6px", fontStyle: "italic" }}>
+                No chat history yet
+              </div>
+            )}
+            {sessions.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => handleLoadSession(s.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "8px 8px",
+                  borderRadius: "var(--radius-sm)",
+                  border: "none",
+                  background: currentSessionId === s.id ? "var(--accent-info)" : "transparent",
+                  color: currentSessionId === s.id ? "#fff" : "var(--ink)",
+                  cursor: "pointer",
+                  fontSize: 12.5,
+                  fontFamily: "var(--font-body)",
+                  lineHeight: 1.4,
+                  marginBottom: 2,
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={(e) => {
+                  if (currentSessionId !== s.id) e.currentTarget.style.background = "var(--paper-raised)";
+                }}
+                onMouseLeave={(e) => {
+                  if (currentSessionId !== s.id) e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <MessageSquare size={13} style={{ flexShrink: 0, marginTop: 2, opacity: 0.6 }} />
+                <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {s.title}
+                </span>
+                <span
+                  onClick={(e) => handleDeleteSession(s.id, e)}
+                  title="Delete chat"
+                  style={{
+                    flexShrink: 0,
+                    opacity: 0.4,
+                    cursor: "pointer",
+                    padding: 2,
+                    display: "flex",
+                  }}
+                >
+                  <Trash2 size={11} />
+                </span>
+              </button>
+            ))}
+          </div>
+        </>,
+        sidebarSlot
+      )}
+
+      {/* Main chat area */}
+      <div style={{ height: "100%", minWidth: 0, display: "flex", flexDirection: "column" }}>
+        {/* Header */}
+        <header
+          style={{
+            padding: "12px 24px",
+            borderBottom: "1px solid var(--hairline)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Bot size={18} style={{ color: "var(--accent-info)" }} />
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
               AI Assistant
             </span>
-              {!configured && (
-                  <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--accent-warning)", background: "var(--clay-soft)", padding: "2px 8px", borderRadius: "var(--radius-sm)" }}>
+            {!configured && (
+              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--accent-warning)", background: "var(--clay-soft)", padding: "2px 8px", borderRadius: "var(--radius-sm)" }}>
                 Not configured
               </span>
-              )}
-              {configured && (
-                  <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--ink-soft)", background: "var(--paper-raised)", padding: "2px 8px", borderRadius: "var(--radius-sm)", border: "1px solid var(--hairline)" }}>
+            )}
+            {configured && (
+              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--ink-soft)", background: "var(--paper-raised)", padding: "2px 8px", borderRadius: "var(--radius-sm)", border: "1px solid var(--hairline)" }}>
                 {config.provider} · {config.model}
               </span>
-              )}
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={handleNewChat} title="New chat" style={headerBtnStyle}>
-                <Plus size={14} />
-              </button>
-              <button onClick={refreshContext} disabled={contextLoading} title="Refresh vault context" style={headerBtnStyle}>
-                <RefreshCw size={14} style={contextLoading ? { animation: "spin 1s linear infinite" } : {}} />
-              </button>
-              <button onClick={() => setSettingsOpen(true)} title="AI Settings" style={headerBtnStyle}>
-                <Settings size={14} />
-              </button>
-            </div>
-          </header>
-
-          {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
-            {messages.length === 0 && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16 }}>
-                  <Bot size={48} style={{ color: "var(--hairline-strong)", opacity: 0.5 }} />
-                  <div style={{ fontSize: 15, color: "var(--ink-soft)", textAlign: "center", maxWidth: 400 }}>
-                    Chat with AI to manage your vault or just have a conversation. Ask me to create notes, organize meetings, draft stories, brainstorm ideas, and more.
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 500 }}>
-                    {SUGGESTIONS.map((s) => (
-                        <button
-                            key={s}
-                            onClick={() => { setInput(s); textareaRef.current?.focus(); }}
-                            style={suggestionStyle}
-                        >
-                          {s}
-                        </button>
-                    ))}
-                  </div>
-                </div>
             )}
-
-            {messages.map((msg) => {
-              return (
-                  <MessageBubble
-                      key={msg.id}
-                      message={msg}
-                  />
-              );
-            })}
-
-            {loading && streamingContent && (
-                <MessageBubble
-                    message={{
-                      id: "streaming",
-                      role: "assistant",
-                      content: streamingContent,
-                      toolCalls: streamingToolCalls.length > 0 ? streamingToolCalls : undefined,
-                      timestamp: Date.now(),
-                    }}
-                />
-            )}
-
-            {loading && !streamingContent && (
-                <div style={{ display: "flex", gap: 10, padding: "8px 0", alignItems: "center" }}>
-                  <div style={{ ...avatarStyle, background: "var(--accent-info)", color: "#fff" }}>
-                    <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
-                  </div>
-                  <div style={{ fontSize: 14, color: "var(--ink-soft)", padding: "10px 14px", fontStyle: "italic" }}>
-                    Thinking...
-                  </div>
-                </div>
-            )}
-
-            <div ref={messagesEndRef} />
           </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={handleNewChat} title="New chat" style={headerBtnStyle}>
+              <Plus size={14} />
+            </button>
+            <button onClick={refreshContext} disabled={contextLoading} title="Refresh vault context" style={headerBtnStyle}>
+              <RefreshCw size={14} style={contextLoading ? { animation: "spin 1s linear infinite" } : {}} />
+            </button>
+            <button onClick={() => setSettingsOpen(true)} title="AI Settings" style={headerBtnStyle}>
+              <Settings size={14} />
+            </button>
+          </div>
+        </header>
 
-          {/* Input */}
-          <div style={{ padding: "12px 24px 16px", borderTop: "1px solid var(--hairline)" }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: "var(--paper-raised)",
-              border: "1px solid var(--hairline-strong)",
-              borderRadius: "var(--radius-md)",
-              padding: "10px 14px",
-            }}>
-            <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={configured ? "Ask me anything — vault tasks, writing, ideas..." : "Configure AI settings first..."}
-                rows={1}
-                style={{
-                  flex: 1,
-                  border: "none",
-                  outline: "none",
-                  background: "transparent",
-                  fontSize: 14,
-                  fontFamily: "var(--font-body)",
-                  color: "var(--ink)",
-                  resize: "none",
-                  lineHeight: 1.5,
-                  minHeight: 21,
-                  maxHeight: 160,
-                  display: "block",
-                  padding: 0,
-                  margin: 0,
-                }}
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+          {messages.length === 0 && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16 }}>
+              <Bot size={48} style={{ color: "var(--hairline-strong)", opacity: 0.5 }} />
+              <div style={{ fontSize: 15, color: "var(--ink-soft)", textAlign: "center", maxWidth: 400 }}>
+                Chat with AI to manage your vault or just have a conversation. Ask me to create notes, organize meetings, draft stories, brainstorm ideas, and more.
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 500 }}>
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setInput(s); textareaRef.current?.focus(); }}
+                    style={suggestionStyle}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.map((msg) => {
+            return (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+              />
+            );
+          })}
+
+          {loading && streamingContent && (
+            <MessageBubble
+              message={{
+                id: "streaming",
+                role: "assistant",
+                content: streamingContent,
+                toolCalls: streamingToolCalls.length > 0 ? streamingToolCalls : undefined,
+                timestamp: Date.now(),
+              }}
             />
-              {loading ? (
-                <button
-                    onClick={handleStop}
-                    title="Stop generating"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      flexShrink: 0,
-                      borderRadius: "var(--radius-sm)",
-                      border: "none",
-                      background: "var(--danger)",
-                      color: "#fff",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "background 0.15s",
-                    }}
-                >
-                  <Square size={14} fill="currentColor" />
-                </button>
-              ) : (
-                <button
-                    onClick={handleSend}
-                    disabled={!input.trim()}
-                    title="Send message"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      flexShrink: 0,
-                      borderRadius: "var(--radius-sm)",
-                      border: "none",
-                      background: input.trim() ? "var(--accent-info)" : "var(--hairline)",
-                      color: input.trim() ? "#fff" : "var(--ink-soft)",
-                      cursor: input.trim() ? "pointer" : "not-allowed",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "background 0.15s",
-                    }}
-                >
-                  <Send size={14} />
-                </button>
-              )}
+          )}
+
+          {loading && !streamingContent && (
+            <div style={{ display: "flex", gap: 10, padding: "8px 0", alignItems: "center" }}>
+              <div style={{ ...avatarStyle, background: "var(--accent-info)", color: "#fff" }}>
+                <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+              </div>
+              <div style={{ fontSize: 14, color: "var(--ink-soft)", padding: "10px 14px", fontStyle: "italic" }}>
+                Thinking...
+              </div>
             </div>
-            <div style={{
-              fontSize: 11,
-              color: "var(--ink-soft)",
-              marginTop: 6,
-              fontFamily: "var(--font-mono)",
-              textAlign: "center",
-            }}>
-              Enter to send · Shift+Enter for newline
-            </div>
-          </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
 
-        <AiSettingsModal
-            open={settingsOpen}
-            config={config}
-            onClose={() => setSettingsOpen(false)}
-            onSave={handleSaveConfig}
-        />
-
-        <Dialog
-            open={confirmDeleteSession !== null}
-            title="Delete chat history?"
-            onClose={() => setConfirmDeleteSession(null)}
-            footer={
-              <>
-                <button
-                    onClick={() => setConfirmDeleteSession(null)}
-                    style={{
-                      border: "1px solid var(--hairline-strong)",
-                      background: "var(--paper-raised)",
-                      borderRadius: "var(--radius-sm)",
-                      padding: "7px 14px",
-                      fontSize: 13,
-                      cursor: "pointer",
-                      color: "var(--ink-soft)",
-                    }}
-                >
-                  Cancel
-                </button>
-                <button
-                    onClick={doConfirmDeleteSession}
-                    style={{
-                      border: "none",
-                      background: "#ff3b30",
-                      color: "#fff",
-                      borderRadius: "var(--radius-sm)",
-                      padding: "7px 14px",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                    }}
-                >
-                  Delete
-                </button>
-              </>
-            }
-        >
-          <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
-            This chat history will be permanently deleted.
-          </p>
-        </Dialog>
+        {/* Input */}
+        <div style={{ padding: "12px 24px 16px", borderTop: "1px solid var(--hairline)" }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "var(--paper-raised)",
+            border: "1px solid var(--hairline-strong)",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 14px",
+          }}>
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={configured ? "Ask me anything — vault tasks, writing, ideas..." : "Configure AI settings first..."}
+              rows={1}
+              style={{
+                flex: 1,
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                fontSize: 14,
+                fontFamily: "var(--font-body)",
+                color: "var(--ink)",
+                resize: "none",
+                lineHeight: 1.5,
+                minHeight: 21,
+                maxHeight: 160,
+                display: "block",
+                padding: 0,
+                margin: 0,
+              }}
+            />
+            {loading ? (
+              <button
+                onClick={handleStop}
+                title="Stop generating"
+                style={{
+                  width: 32,
+                  height: 32,
+                  flexShrink: 0,
+                  borderRadius: "var(--radius-sm)",
+                  border: "none",
+                  background: "var(--danger)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.15s",
+                }}
+              >
+                <Square size={14} fill="currentColor" />
+              </button>
+            ) : (
+              <button
+                onClick={handleSend}
+                disabled={!input.trim()}
+                title="Send message"
+                style={{
+                  width: 32,
+                  height: 32,
+                  flexShrink: 0,
+                  borderRadius: "var(--radius-sm)",
+                  border: "none",
+                  background: input.trim() ? "var(--accent-info)" : "var(--hairline)",
+                  color: input.trim() ? "#fff" : "var(--ink-soft)",
+                  cursor: input.trim() ? "pointer" : "not-allowed",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.15s",
+                }}
+              >
+                <Send size={14} />
+              </button>
+            )}
+          </div>
+          <div style={{
+            fontSize: 11,
+            color: "var(--ink-soft)",
+            marginTop: 6,
+            fontFamily: "var(--font-mono)",
+            textAlign: "center",
+          }}>
+            Enter to send · Shift+Enter for newline
+          </div>
+        </div>
       </div>
+
+      <AiSettingsModal
+        open={settingsOpen}
+        config={config}
+        onClose={() => setSettingsOpen(false)}
+        onSave={handleSaveConfig}
+      />
+
+      <Dialog
+        open={confirmDeleteSession !== null}
+        title="Delete chat history?"
+        onClose={() => setConfirmDeleteSession(null)}
+        footer={
+          <>
+            <button
+              onClick={() => setConfirmDeleteSession(null)}
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                background: "var(--paper-raised)",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+                color: "var(--ink-soft)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={doConfirmDeleteSession}
+              style={{
+                border: "none",
+                background: "#ff3b30",
+                color: "#fff",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Delete
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          This chat history will be permanently deleted.
+        </p>
+      </Dialog>
+    </div>
   );
 }
 
@@ -629,105 +629,105 @@ function genId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function MessageBubble({ message}: { message: AiMessage}) {
+function MessageBubble({ message }: { message: AiMessage }) {
   const [toolsExpanded, setToolsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
   const isError = message.role === "system";
 
   return (
-      <div style={{ display: "flex", gap: 10, padding: "8px 0", alignItems: "flex-start" }}>
-        {!isUser ? (
-            <div style={{
-              ...avatarStyle,
-              background: isError ? "var(--danger)" : "var(--accent-info)",
-              color: "#fff",
-            }}>
-              {isError ? "!" : <Bot size={14} />}
-            </div>
+    <div style={{ display: "flex", gap: 10, padding: "8px 0", alignItems: "flex-start" }}>
+      {!isUser ? (
+        <div style={{
+          ...avatarStyle,
+          background: isError ? "var(--danger)" : "var(--accent-info)",
+          color: "#fff",
+        }}>
+          {isError ? "!" : <Bot size={14} />}
+        </div>
+      ) : (
+        <div style={{ ...avatarStyle, background: "var(--moss)", color: "#fff" }}>
+          U
+        </div>
+      )}
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {isUser || isError ? (
+          <div style={{
+            fontSize: 14,
+            lineHeight: 1.6,
+            color: isError ? "var(--danger)" : "var(--ink)",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}>
+            {message.content}
+          </div>
         ) : (
-            <div style={{ ...avatarStyle, background: "var(--moss)", color: "#fff" }}>
-              U
-            </div>
+          <div className="ai-markdown" style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink)", wordBreak: "break-word" }}>
+            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{message.content}</Markdown>
+          </div>
         )}
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {isUser || isError ? (
-            <div style={{
-              fontSize: 14,
-              lineHeight: 1.6,
-              color: isError ? "var(--danger)" : "var(--ink)",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}>
-              {message.content}
-            </div>
-          ) : (
-            <div className="ai-markdown" style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink)", wordBreak: "break-word" }}>
-              <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{message.content}</Markdown>
-            </div>
-          )}
+        {message.toolCalls && message.toolCalls.length > 0 && (
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={() => setToolsExpanded(!toolsExpanded)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12,
+                fontFamily: "var(--font-mono)",
+                color: "var(--ink-soft)",
+                background: "var(--paper-raised)",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                padding: "4px 10px",
+                cursor: "pointer",
+              }}
+            >
+              <Wrench size={12} />
+              {message.toolCalls.length} tool call{message.toolCalls.length > 1 ? "s" : ""}
+              {toolsExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            </button>
 
-          {message.toolCalls && message.toolCalls.length > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <button
-                    onClick={() => setToolsExpanded(!toolsExpanded)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      fontSize: 12,
-                      fontFamily: "var(--font-mono)",
-                      color: "var(--ink-soft)",
-                      background: "var(--paper-raised)",
-                      border: "1px solid var(--hairline)",
-                      borderRadius: "var(--radius-sm)",
-                      padding: "4px 10px",
-                      cursor: "pointer",
-                    }}
-                >
-                  <Wrench size={12} />
-                  {message.toolCalls.length} tool call{message.toolCalls.length > 1 ? "s" : ""}
-                  {toolsExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                </button>
-
-                {toolsExpanded && (
-                    <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
-                      {message.toolCalls.map((tc) => (
-                          <ToolCallCard key={tc.id} toolCall={tc} />
-                      ))}
-                    </div>
-                )}
+            {toolsExpanded && (
+              <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
+                {message.toolCalls.map((tc) => (
+                  <ToolCallCard key={tc.id} toolCall={tc} />
+                ))}
               </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {!isUser && !isError && (
-              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4, marginTop: 6, opacity: 0.5, transition: "opacity 0.15s" }}
-                   onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
-                   onMouseLeave={(e) => e.currentTarget.style.opacity = "0.5"}>
-                <div style={{ fontSize: 10, color: "var(--ink-soft)", marginTop: 4, fontFamily: "var(--font-mono)", opacity: 0.6 }}>
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </div>
-                <div>
-                  <button
-                      onClick={() => { navigator.clipboard.writeText(message.content); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-                      style={actionBtnStyle}
-                      title="Copy"
-                  >
-                    {copied ? <span style={{ fontSize: 11, color: "var(--moss-deep)" }}>Copied</span> : "Copy"}
-                  </button>
-                  {/*{onRetry && (*/}
-                  {/*    <button onClick={() => onRetry(message.content)} style={actionBtnStyle} title="Retry">*/}
-                  {/*      Retry*/}
-                  {/*    </button>*/}
-                  {/*)}*/}
-                </div>
-              </div>
-          )}
+        {!isUser && !isError && (
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4, marginTop: 6, opacity: 0.5, transition: "opacity 0.15s" }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = "0.5"}>
+            <div style={{ fontSize: 10, color: "var(--ink-soft)", marginTop: 4, fontFamily: "var(--font-mono)", opacity: 0.6 }}>
+              {new Date(message.timestamp).toLocaleTimeString()}
+            </div>
+            <div>
+              <button
+                onClick={() => { navigator.clipboard.writeText(message.content); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                style={actionBtnStyle}
+                title="Copy"
+              >
+                {copied ? <span style={{ fontSize: 11, color: "var(--moss-deep)" }}>Copied</span> : "Copy"}
+              </button>
+              {/*{onRetry && (*/}
+              {/*    <button onClick={() => onRetry(message.content)} style={actionBtnStyle} title="Retry">*/}
+              {/*      Retry*/}
+              {/*    </button>*/}
+              {/*)}*/}
+            </div>
+          </div>
+        )}
 
 
-        </div>
       </div>
+    </div>
   );
 }
 
@@ -735,52 +735,54 @@ function ToolCallCard({ toolCall }: { toolCall: AiToolCall }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-      <div style={{
-        background: "var(--paper)",
-        border: "1px solid var(--hairline)",
-        borderRadius: "var(--radius-sm)",
-        padding: "6px 10px",
-        fontFamily: "var(--font-mono)",
-        fontSize: 12,
-      }}>
-        <button
-            onClick={() => setExpanded(!expanded)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-              fontSize: 12,
-              fontFamily: "var(--font-mono)",
-              color: "var(--accent-info)",
-              padding: 0,
-              width: "100%",
-            }}
-        >
-          {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-          <span style={{ fontWeight: 600 }}>{toolCall.name}</span>
-          <span style={{ color: "var(--ink-soft)", flex: 1, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+    <div style={{
+      background: "var(--paper)",
+      border: "1px solid var(--hairline)",
+      borderRadius: "var(--radius-sm)",
+      padding: "6px 10px",
+      fontFamily: "var(--font-mono)",
+      fontSize: 12,
+    }}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          border: "none",
+          background: "transparent",
+          cursor: "pointer",
+          fontSize: 12,
+          fontFamily: "var(--font-mono)",
+          color: "var(--accent-info)",
+          padding: 0,
+          width: "100%",
+        }}
+      >
+        {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        <span style={{ fontWeight: 600 }}>{toolCall.name}</span>
+        <span style={{ color: "var(--ink-soft)", flex: 1, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {Object.entries(toolCall.arguments).map(([k, v]) => `${k}=${typeof v === "string" ? v.slice(0, 30) : JSON.stringify(v).slice(0, 20)}`).join(", ")}
         </span>
-        </button>
+      </button>
 
-        {expanded && (
-            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
-              <div>
-                <span style={{ color: "var(--ink-soft)" }}>Args: </span>
-                <span style={{ color: "var(--ink)" }}>{JSON.stringify(toolCall.arguments, null, 2)}</span>
+      {expanded && (
+        <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
+          <div>
+            <span style={{ color: "var(--ink-soft)" }}>Args: </span>
+            <span style={{ color: "var(--ink)" }}>{JSON.stringify(toolCall.arguments, null, 2)}</span>
+          </div>
+          {toolCall.result && (
+            <div>
+              <span style={{ color: "var(--ink-soft)" }}>Result: </span>
+              <div className="ai-markdown" style={{ display: "inline", color: "var(--moss-deep)" }}>
+                <Markdown remarkPlugins={[remarkGfm]}>{toolCall.result}</Markdown>
               </div>
-              {toolCall.result && (
-                  <div>
-                    <span style={{ color: "var(--ink-soft)" }}>Result: </span>
-                    <span style={{ color: "var(--moss-deep)" }}>{toolCall.result}</span>
-                  </div>
-              )}
             </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

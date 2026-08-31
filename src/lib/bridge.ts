@@ -80,3 +80,13 @@ export function joinPath(root: string, ...parts: string[]): string {
 export async function setVaultPath(path: string): Promise<void> {
   await invoke("set_vault_path", { path });
 }
+
+export interface SearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+export async function webSearch(query: string): Promise<SearchResult[]> {
+  return invoke<SearchResult[]>("web_search", { query });
+}
