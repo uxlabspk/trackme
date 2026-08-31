@@ -9,7 +9,12 @@ import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { VaultEntry } from "../lib/types";
 import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link, FolderPlus } from "lucide-react";
 
-interface Props { vaultPath: string; sidebarSlot: HTMLDivElement | null; }
+interface Props {
+  vaultPath: string;
+  sidebarSlot: HTMLDivElement | null;
+  triggerCreate?: number;
+  onCreateConsumed?: () => void;
+}
 
 const CANVAS_DIR = "canvas";
 const CANVAS_EXT = ".canvas.json";
@@ -32,7 +37,7 @@ const SHAPE_ICONS: Record<string, React.ReactNode> = { text: <Type size={14} />,
 type Handle = "nw" | "ne" | "sw" | "se";
 const HANDLE = 8;
 
-export default function CanvasView({ vaultPath, sidebarSlot }: Props) {
+export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, onCreateConsumed }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [canvasData, setCanvasData] = useState<CanvasData>({ nodes: [], edges: [] });
@@ -64,6 +69,12 @@ export default function CanvasView({ vaultPath, sidebarSlot }: Props) {
 
   useEffect(() => { refreshTree(); }, [refreshTree]);
   useEffect(() => { setSelected(null); setCanvasData({ nodes: [], edges: [] }); setSelNodeId(null); setCurrentFolder(CANVAS_DIR); }, [vaultPath]);
+  useEffect(() => {
+    if (triggerCreate && triggerCreate > 0) {
+      setNewOpen(true);
+      onCreateConsumed?.();
+    }
+  }, [triggerCreate, onCreateConsumed]);
 
   useEffect(() => {
     if (!selected) { setCanvasData({ nodes: [], edges: [] }); return; }
@@ -319,7 +330,7 @@ export default function CanvasView({ vaultPath, sidebarSlot }: Props) {
           {/* canvas toolbar */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderBottom: "1px solid var(--hairline)", background: "var(--paper)", flexShrink: 0, flexWrap: "wrap" }}>
             <input value={canvasTitle} onChange={(e) => setCanvasTitle(e.target.value)} placeholder="Untitled"
-              onBlur={async () => { if (!canvasTitle.trim() || !selected) return;     const slug = slugify(canvasTitle.trim()); const dir = parentRelPath(selected, CANVAS_DIR); const newPath = await uniquePath(vaultPath, `${dir}/${slug}${CANVAS_EXT}`); if (newPath !== selected) { await writeFile(joinPath(vaultPath, newPath), JSON.stringify(canvasData, null, 2)); await trashFile(vaultPath, selected); await refreshTree(); setSelected(newPath); } }}
+              onBlur={async () => { if (!canvasTitle.trim() || !selected) return; const slug = slugify(canvasTitle.trim()); const dir = parentRelPath(selected, CANVAS_DIR); const newPath = await uniquePath(vaultPath, `${dir}/${slug}${CANVAS_EXT}`); if (newPath !== selected) { await writeFile(joinPath(vaultPath, newPath), JSON.stringify(canvasData, null, 2)); await trashFile(vaultPath, selected); await refreshTree(); setSelected(newPath); } }}
               style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 600, border: "none", outline: "none", background: "transparent", width: 160, color: "var(--ink)" }} />
             <div style={{ width: 1, height: 20, background: "var(--hairline)", margin: "0 4px" }} />
             {[{ id: "select" as const, icon: <MousePointer size={14} />, tip: "Select" }, { id: "connect" as const, icon: <Link size={14} />, tip: "Connect" }].map((t) => (

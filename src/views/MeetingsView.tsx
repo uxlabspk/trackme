@@ -22,6 +22,8 @@ interface Props {
   searchTarget?: string | null;
   onSearchHandled?: () => void;
   sidebarSlot: HTMLDivElement | null;
+  triggerCreate?: number;
+  onCreateConsumed?: () => void;
 }
 
 function isValidRecurrence(r: unknown): r is Recurrence {
@@ -66,7 +68,7 @@ function defaultRecurrence(): Recurrence {
   };
 }
 
-export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot }: Props) {
+export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot, triggerCreate, onCreateConsumed }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [meeting, setMeeting] = useState<MeetingFile | null>(null);
@@ -99,6 +101,13 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled,
       onSearchHandled?.();
     }
   }, [searchTarget, onSearchHandled]);
+
+  useEffect(() => {
+    if (triggerCreate && triggerCreate > 0) {
+      openNewDialog();
+      onCreateConsumed?.();
+    }
+  }, [triggerCreate, onCreateConsumed]);
 
   useEffect(() => {
     if (!selected) {
@@ -209,22 +218,22 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled,
             </h2>
             <div style={{ display: "flex", gap: 6 }}>
               <button
-              onClick={openNewDialog}
-              title="New meeting series"
-              style={{
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 24,
-                height: 24,
-                cursor: "pointer",
-                fontSize: 15,
-                color: "var(--clay-deep)",
-              }}
-            >
-              +
-            </button>
-          </div>
+                onClick={openNewDialog}
+                title="New meeting series"
+                style={{
+                  border: "1px solid var(--hairline-strong)",
+                  background: "var(--paper-raised)",
+                  borderRadius: "var(--radius-sm)",
+                  width: 24,
+                  height: 24,
+                  cursor: "pointer",
+                  fontSize: 15,
+                  color: "var(--clay-deep)",
+                }}
+              >
+                +
+              </button>
+            </div>
           </div>
           <FileTreeList
             entries={tree}
@@ -278,45 +287,45 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled,
                     color: "var(--ink)",
                   }}
                 />
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   {!occurrencesOpen && (
-                  <button
+                    <button
                       onClick={() => setOccurrencesOpen(true)}
                       title="Show upcoming"
                       style={{
-                          display: "flex",
-                          alignItems: "center",
-                          border: "1px solid var(--hairline-strong)",
-                          background: "var(--paper-raised)",
-                          borderRadius: "var(--radius-sm)",
-                          padding: "6px 8px",
-                          cursor: "pointer",
-                          color: "var(--ink-soft)",
+                        display: "flex",
+                        alignItems: "center",
+                        border: "1px solid var(--hairline-strong)",
+                        background: "var(--paper-raised)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "6px 8px",
+                        cursor: "pointer",
+                        color: "var(--ink-soft)",
                       }}
-                  >
+                    >
                       <PanelRightOpen size={14} />
-                  </button>
+                    </button>
                   )}
                   <button
-                      onClick={handleDelete}
-                      style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          border: "none",
-                          background: "#ff3b30",
-                          color: "#fff",
-                          fontSize: 13,
-                          fontWeight: 500,
-                          padding: "6px 12px",
-                          borderRadius: 6,
-                          cursor: "pointer",
-                      }}
+                    onClick={handleDelete}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      border: "none",
+                      background: "#ff3b30",
+                      color: "#fff",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                    }}
                   >
-                      <Trash2 size={14} />
-                      Remove
+                    <Trash2 size={14} />
+                    Remove
                   </button>
-                  </div>
+                </div>
               </div>
               <div
                 style={{
@@ -479,76 +488,76 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled,
               }}
             >
               {occurrencesOpen && (
-              <>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <h3
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "var(--ink-soft)",
-                  letterSpacing: "0.04em",
-                  margin: 0,
-                }}
-              >
-                NEXT 90 DAYS
-              </h3>
-              <button
-                onClick={() => setOccurrencesOpen(false)}
-                title="Hide upcoming"
-                style={{
-                  border: "1px solid var(--hairline-strong)",
-                  background: "var(--paper-raised)",
-                  borderRadius: "var(--radius-sm)",
-                  width: 22,
-                  height: 22,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--ink-soft)",
-                }}
-              >
-                <PanelRightClose size={12} />
-              </button>
-              </div>
-              {occurrences.length === 0 ? (
-                <p style={{ fontSize: 13, color: "var(--ink-soft)", fontStyle: "italic" }}>
-                  No occurrences in this window.
-                </p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {occurrences.map((date) => (
-                    <div
-                      key={date}
+                <>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <h3
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        padding: "8px 10px",
-                        borderRadius: "var(--radius-md)",
-                        background: "var(--clay-soft)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--ink-soft)",
+                        letterSpacing: "0.04em",
+                        margin: 0,
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: 12.5,
-                          color: "var(--clay-deep)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {formatDayOfWeek(new Date(date + "T00:00:00"))}
-                      </span>
-                      {meeting.frontmatter.time && (
-                        <span style={{ fontSize: 12, color: "var(--clay-deep)", marginLeft: "auto" }}>
-                          {meeting.frontmatter.time}
-                        </span>
-                      )}
+                      NEXT 90 DAYS
+                    </h3>
+                    <button
+                      onClick={() => setOccurrencesOpen(false)}
+                      title="Hide upcoming"
+                      style={{
+                        border: "1px solid var(--hairline-strong)",
+                        background: "var(--paper-raised)",
+                        borderRadius: "var(--radius-sm)",
+                        width: 22,
+                        height: 22,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "var(--ink-soft)",
+                      }}
+                    >
+                      <PanelRightClose size={12} />
+                    </button>
+                  </div>
+                  {occurrences.length === 0 ? (
+                    <p style={{ fontSize: 13, color: "var(--ink-soft)", fontStyle: "italic" }}>
+                      No occurrences in this window.
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {occurrences.map((date) => (
+                        <div
+                          key={date}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            padding: "8px 10px",
+                            borderRadius: "var(--radius-md)",
+                            background: "var(--clay-soft)",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: 12.5,
+                              color: "var(--clay-deep)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {formatDayOfWeek(new Date(date + "T00:00:00"))}
+                          </span>
+                          {meeting.frontmatter.time && (
+                            <span style={{ fontSize: 12, color: "var(--clay-deep)", marginLeft: "auto" }}>
+                              {meeting.frontmatter.time}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-              </>
+                  )}
+                </>
               )}
             </aside>
           </>

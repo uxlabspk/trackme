@@ -31,14 +31,14 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: "agenda",   label: "Today",    icon: <Calendar size={15} />,      group: "main" },
-  { id: "notes",    label: "Notes",    icon: <FileText size={15} />,      group: "main" },
-  { id: "meetings", label: "Meetings", icon: <CalendarDays size={15} />,  group: "main" },
-  { id: "todos",    label: "Todos",    icon: <CheckSquare size={15} />,   group: "main" },
-  { id: "projects", label: "Projects", icon: <FolderKanban size={15} />,  group: "main" },
-  { id: "graph",    label: "Graph",    icon: <Network size={15} />,       group: "tools" },
-  { id: "canvas",   label: "Canvas",   icon: <LayoutGrid size={15} />,    group: "tools" },
-  { id: "ai",       label: "AI",       icon: <Bot size={15} />,           group: "tools" },
+  { id: "agenda", label: "Today", icon: <Calendar size={15} />, group: "main" },
+  { id: "notes", label: "Notes", icon: <FileText size={15} />, group: "main" },
+  { id: "meetings", label: "Meetings", icon: <CalendarDays size={15} />, group: "main" },
+  { id: "todos", label: "Todos", icon: <CheckSquare size={15} />, group: "main" },
+  { id: "projects", label: "Projects", icon: <FolderKanban size={15} />, group: "main" },
+  { id: "graph", label: "Graph", icon: <Network size={15} />, group: "tools" },
+  { id: "canvas", label: "Canvas", icon: <LayoutGrid size={15} />, group: "tools" },
+  { id: "ai", label: "AI", icon: <Bot size={15} />, group: "tools" },
 ];
 
 export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
@@ -46,6 +46,13 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTarget, setSearchTarget] = useState<{ tab: Tab; relPath: string } | null>(null);
   const [vaultSwitcherOpen, setVaultSwitcherOpen] = useState(false);
+  const [createSignal, setCreateSignal] = useState<Record<"notes" | "meetings" | "todos" | "projects" | "canvas", number>>({
+    notes: 0,
+    meetings: 0,
+    todos: 0,
+    projects: 0,
+    canvas: 0,
+  });
   const { theme, toggleTheme } = useTheme();
   const vaultName = vaultPath.split(/[/\\]/).filter(Boolean).pop() ?? "Vault";
 
@@ -90,22 +97,55 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
 
   const clearSearchTarget = useCallback(() => setSearchTarget(null), []);
 
+  const fireCreateFor = useCallback((id: "notes" | "meetings" | "todos" | "projects" | "canvas") => {
+    setTab(id);
+    setCreateSignal((prev) => ({ ...prev, [id]: prev[id] + 1 }));
+  }, []);
+
+  const consumeCreateSignal = useCallback((id: "notes" | "meetings" | "todos" | "projects" | "canvas") => {
+    setCreateSignal((prev) => ({ ...prev, [id]: 0 }));
+  }, []);
+
   const mainTabs = TABS.filter((t) => t.group === "main");
   const toolTabs = TABS.filter((t) => t.group === "tools");
 
   const renderNavItem = (t: TabDef) => {
     const setter = listSetters[t.id];
     const active = tab === t.id;
+    const canCreate = (t.id === "notes" || t.id === "meetings" || t.id === "todos" || t.id === "projects" || t.id === "canvas");
     return (
       <Fragment key={t.id}>
-        <button
-          onClick={() => setTab(t.id)}
-          className={`nav-item${active ? " active" : ""}`}
-          style={{ flexShrink: 0 }}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            width: "100%",
+          }}
         >
-          {t.icon}
-          {t.label}
-        </button>
+          <button
+            onClick={() => setTab(t.id)}
+            className={`nav-item${active ? " active" : ""}`}
+            style={{ flexShrink: 0, flex: 1 }}
+          >
+            {t.icon}
+            {t.label}
+          </button>
+          {canCreate && active && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                fireCreateFor(t.id as "notes" | "meetings" | "todos" | "projects" | "canvas");
+              }}
+              className="nav-inline-action"
+              title={`Create new ${t.label.toLowerCase().slice(0, -1)}`}
+              aria-label={`Create new ${t.label.toLowerCase().slice(0, -1)}`}
+            >
+              +
+            </button>
+          )}
+        </div>
         {setter && (
           <div
             ref={setter}
@@ -275,16 +315,27 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             searchTarget={searchTarget?.tab === "notes" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
             sidebarSlot={notesSlot}
+            triggerCreate={createSignal.notes}
+            onCreateConsumed={() => consumeCreateSignal("notes")}
           />
         )}
         {tab === "graph" && <GraphView vaultPath={vaultPath} />}
-        {tab === "canvas" && <CanvasView vaultPath={vaultPath} sidebarSlot={canvasSlot} />}
+        {tab === "canvas" && (
+          <CanvasView
+            vaultPath={vaultPath}
+            sidebarSlot={canvasSlot}
+            triggerCreate={createSignal.canvas}
+            onCreateConsumed={() => consumeCreateSignal("canvas")}
+          />
+        )}
         {tab === "meetings" && (
           <MeetingsView
             vaultPath={vaultPath}
             searchTarget={searchTarget?.tab === "meetings" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
             sidebarSlot={meetingsSlot}
+            triggerCreate={createSignal.meetings}
+            onCreateConsumed={() => consumeCreateSignal("meetings")}
           />
         )}
         {tab === "todos" && (
@@ -293,6 +344,8 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             searchTarget={searchTarget?.tab === "todos" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
             sidebarSlot={todosSlot}
+            triggerCreate={createSignal.todos}
+            onCreateConsumed={() => consumeCreateSignal("todos")}
           />
         )}
         {tab === "projects" && (
@@ -301,6 +354,8 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             searchTarget={searchTarget?.tab === "projects" ? searchTarget.relPath : null}
             onSearchHandled={clearSearchTarget}
             sidebarSlot={projectsSlot}
+            triggerCreate={createSignal.projects}
+            onCreateConsumed={() => consumeCreateSignal("projects")}
           />
         )}
         {tab === "ai" && <AiChatView vaultPath={vaultPath} sidebarSlot={aiSlot} />}

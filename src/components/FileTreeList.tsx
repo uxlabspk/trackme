@@ -32,12 +32,14 @@ export default function FileTreeList({
       <div
         className="ft-empty"
         style={{
-          padding: "20px 14px",
+          padding: "8px 12px 0",
           fontSize: 12.5,
           color: "var(--ink-soft)",
-          fontStyle: "italic",
-          textAlign: "center",
-          lineHeight: 1.5,
+          lineHeight: 1.4,
+          textAlign: "left",
+          whiteSpace: "normal",
+          maxWidth: "100%",
+          width: "fit-content",
         }}
       >
         {emptyLabel}
@@ -46,7 +48,7 @@ export default function FileTreeList({
   }
 
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {entries.map((entry) => (
         <div key={entry.rel_path}>
           {entry.is_dir ? (
@@ -71,7 +73,7 @@ export default function FileTreeList({
                 gap: 6,
                 width: "100%",
                 textAlign: "left",
-                padding: `7px 14px 7px ${14 + depth * 14}px`,
+                padding: `7px 10px 7px ${12 + depth * 12}px`,
                 border: "none",
                 background:
                   selectedRelPath === entry.rel_path ? "var(--moss-soft)" : "transparent",
@@ -79,8 +81,9 @@ export default function FileTreeList({
                   selectedRelPath === entry.rel_path
                     ? "2px solid var(--moss)"
                     : "2px solid transparent",
+                borderRadius: 6,
                 cursor: "pointer",
-                fontSize: 13,
+                fontSize: 12.5,
                 color: selectedRelPath === entry.rel_path ? "var(--moss-deep)" : "var(--ink)",
                 fontWeight: selectedRelPath === entry.rel_path ? 600 : 400,
                 whiteSpace: "nowrap",
@@ -141,6 +144,13 @@ function FolderRow({
 
   const isSelected = selectedFolderRelPath === entry.rel_path;
 
+  const handleFolderSelect = () => {
+    onSelectFolder?.(entry.rel_path);
+    if (onToggleFolder && !open) {
+      onToggleFolder(entry.rel_path);
+    }
+  };
+
   return (
     <>
       <div
@@ -148,10 +158,12 @@ function FolderRow({
         style={{
           display: "flex",
           alignItems: "center",
-          paddingLeft: `${14 + depth * 14}px`,
+          paddingLeft: `${12 + depth * 12}px`,
           paddingRight: 6,
           borderLeft: isSelected ? "2px solid var(--moss)" : "2px solid transparent",
           background: isSelected ? "var(--paper-raised)" : "transparent",
+          borderRadius: 6,
+          minHeight: 28,
         }}
       >
         <button
@@ -161,7 +173,7 @@ function FolderRow({
             background: "transparent",
             padding: "2px 4px 2px 0",
             cursor: "pointer",
-            color: "var(--ink-soft)",
+            color: isSelected ? "var(--moss-deep)" : "var(--ink-soft)",
             display: "flex",
             alignItems: "center",
             flexShrink: 0,
@@ -170,7 +182,7 @@ function FolderRow({
           {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         </button>
         <button
-          onClick={() => onSelectFolder?.(entry.rel_path)}
+          onClick={handleFolderSelect}
           className="ft-folder-btn"
           style={{
             flex: 1,

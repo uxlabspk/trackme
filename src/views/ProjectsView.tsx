@@ -27,9 +27,11 @@ interface Props {
   searchTarget?: string | null;
   onSearchHandled?: () => void;
   sidebarSlot: HTMLDivElement | null;
+  triggerCreate?: number;
+  onCreateConsumed?: () => void;
 }
 
-export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot }: Props) {
+export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot, triggerCreate, onCreateConsumed }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [project, setProject] = useState<ProjectFile | null>(null);
@@ -76,6 +78,13 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled,
       onSearchHandled?.();
     }
   }, [searchTarget, onSearchHandled]);
+
+  useEffect(() => {
+    if (triggerCreate && triggerCreate > 0) {
+      openNewDialog();
+      onCreateConsumed?.();
+    }
+  }, [triggerCreate, onCreateConsumed]);
 
   useEffect(() => {
     if (!selected) {
@@ -218,20 +227,20 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled,
             </h2>
             <div style={{ display: "flex", gap: 6 }}>
               <button
-              onClick={openNewDialog}
-              title="New project"
-              style={{
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 24,
-                height: 24,
-                cursor: "pointer",
-                fontSize: 15,
-                color: "var(--moss-deep)",
-              }}
-            >
-              +
+                onClick={openNewDialog}
+                title="New project"
+                style={{
+                  border: "1px solid var(--hairline-strong)",
+                  background: "var(--paper-raised)",
+                  borderRadius: "var(--radius-sm)",
+                  width: 24,
+                  height: 24,
+                  cursor: "pointer",
+                  fontSize: 15,
+                  color: "var(--moss-deep)",
+                }}
+              >
+                +
               </button>
             </div>
           </div>
@@ -315,25 +324,25 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled,
                   }}
                 />
               </div>
-                <button
-                    onClick={handleDeleteProject}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        border: "none",
-                        background: "#ff3b30",
-                        color: "#fff",
-                        fontSize: 13,
-                        fontWeight: 500,
-                        padding: "6px 12px",
-                        borderRadius: 6,
-                        cursor: "pointer",
-                    }}
-                >
-                    <Trash2 size={14} />
-                    Delete Project
-                </button>
+              <button
+                onClick={handleDeleteProject}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  border: "none",
+                  background: "#ff3b30",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                }}
+              >
+                <Trash2 size={14} />
+                Delete Project
+              </button>
             </header>
 
             <div

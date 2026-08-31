@@ -21,9 +21,11 @@ interface Props {
   searchTarget?: string | null;
   onSearchHandled?: () => void;
   sidebarSlot: HTMLDivElement | null;
+  triggerCreate?: number;
+  onCreateConsumed?: () => void;
 }
 
-export default function TodosView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot }: Props) {
+export default function TodosView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot, triggerCreate, onCreateConsumed }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [todo, setTodo] = useState<TodoFile | null>(null);
@@ -52,6 +54,13 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled, si
       onSearchHandled?.();
     }
   }, [searchTarget, onSearchHandled]);
+
+  useEffect(() => {
+    if (triggerCreate && triggerCreate > 0) {
+      openNewDialog();
+      onCreateConsumed?.();
+    }
+  }, [triggerCreate, onCreateConsumed]);
 
   useEffect(() => {
     if (!selected) {
@@ -221,25 +230,25 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled, si
                   {todo.relPath} · {remaining} remaining
                 </div>
               </div>
-                <button
-                    onClick={handleDeleteList}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        border: "none",
-                        background: "#ff3b30",
-                        color: "#fff",
-                        fontSize: 13,
-                        fontWeight: 500,
-                        padding: "6px 12px",
-                        borderRadius: 6,
-                        cursor: "pointer",
-                    }}
-                >
-                    <Trash2 size={14} />
-                    Delete List
-                </button>
+              <button
+                onClick={handleDeleteList}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  border: "none",
+                  background: "#ff3b30",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                }}
+              >
+                <Trash2 size={14} />
+                Delete List
+              </button>
             </header>
 
             <div style={{ flex: 1, overflowY: "auto", padding: "18px 32px" }}>

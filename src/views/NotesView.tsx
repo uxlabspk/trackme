@@ -16,9 +16,11 @@ interface Props {
   searchTarget?: string | null;
   onSearchHandled?: () => void;
   sidebarSlot: HTMLDivElement | null;
+  triggerCreate?: number;
+  onCreateConsumed?: () => void;
 }
 
-export default function NotesView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot }: Props) {
+export default function NotesView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot, triggerCreate, onCreateConsumed }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState<NoteFile | null>(null);
@@ -54,6 +56,13 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled, si
       onSearchHandled?.();
     }
   }, [searchTarget, onSearchHandled]);
+
+  useEffect(() => {
+    if (triggerCreate && triggerCreate > 0) {
+      openNewDialog();
+      onCreateConsumed?.();
+    }
+  }, [triggerCreate, onCreateConsumed]);
 
   useEffect(() => {
     if (!selected) {
@@ -335,26 +344,26 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled, si
                   {note.relPath} · {dirty ? "saving…" : "saved"}
                 </div>
               </div>
-                <button
-                    onClick={handleDelete}
-                    className="note-delete-btn"
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        border: "none",
-                        background: "var(--danger)",
-                        color: "#fff",
-                        fontSize: 13,
-                        fontWeight: 500,
-                        padding: "6px 12px",
-                        borderRadius: 6,
-                        cursor: "pointer",
-                    }}
-                >
-                    <Trash2 size={14} />
-                    Delete
-                </button>
+              <button
+                onClick={handleDelete}
+                className="note-delete-btn"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  border: "none",
+                  background: "var(--danger)",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                }}
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
             </header>
 
             <div style={{ flex: 1, overflow: "hidden" }}>
