@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square } from "lucide-react";
+import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square, BookOpen } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -668,6 +668,10 @@ function MessageBubble({ message }: { message: AiMessage }) {
           </div>
         )}
 
+        {message.toolCalls?.some((toolCall) => toolCall.name === "research_papers" && toolCall.result) && (
+          <ResearchCitations toolCalls={message.toolCalls} />
+        )}
+
         {message.toolCalls && message.toolCalls.length > 0 && (
           <div style={{ marginTop: 8 }}>
             <button
@@ -728,6 +732,38 @@ function MessageBubble({ message }: { message: AiMessage }) {
 
       </div>
     </div>
+  );
+}
+
+function ResearchCitations({ toolCalls }: { toolCalls: AiToolCall[] }) {
+  const papers = toolCalls
+    .filter((toolCall) => toolCall.name === "research_papers" && toolCall.result)
+    .flatMap((toolCall) => (toolCall.result ?? "").split("\n\n"))
+    .map((paper) => {
+      const lines = paper.split("\n");
+      const match = lines[0]?.match(/^\[P(\d+)\] \*\*(.+?)\*\*(?: \((\d{4})\))?$/);
+      const url = lines.find((line) => line.startsWith("URL: "))?.slice(5).trim();
+      if (!match || !url) return null;
+      return { id: match[1], title: match[2], year: match[3], authors: lines.find((line) => line.startsWith("Authors: "))?.slice(9).trim(), url };
+    })
+    .filter((paper): paper is { id: string; title: string; year?: string; authors?: string; url: string } => paper !== null);
+
+  if (papers.length === 0) return null;
+
+  return (
+    <section style={{ marginTop: 14, paddingTop: 10, borderTop: "1px solid var(--hairline)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--ink-soft)", fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+        <BookOpen size={13} /> References
+      </div>
+      <ol style={{ margin: "7px 0 0", paddingLeft: 24, display: "flex", flexDirection: "column", gap: 5 }}>
+        {papers.map((paper) => (
+          <li key={`${paper.id}-${paper.url}`} style={{ paddingLeft: 3, fontSize: 12, lineHeight: 1.45 }}>
+            <a href={paper.url} target="_blank" rel="noreferrer" style={{ color: "var(--accent-info)", fontWeight: 600 }}>{`[P${paper.id}] ${paper.title}`}</a>
+            {(paper.authors || paper.year) && <span style={{ color: "var(--ink-soft)" }}>{` — ${paper.authors ?? ""}${paper.authors && paper.year ? ", " : ""}${paper.year ?? ""}`}</span>}
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

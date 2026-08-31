@@ -28,6 +28,17 @@ pub struct SearchResult {
     pub snippet: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct PaperResult {
+    title: String,
+    authors: String,
+    year: Option<i32>,
+    url: String,
+    doi: Option<String>,
+    abstract_text: String,
+    cited_by_count: i32,
+}
+
 fn trash_metadata_path(vault_root: &str) -> PathBuf {
     PathBuf::from(vault_root).join(".trackme").join("trash.json")
 }
@@ -274,6 +285,65 @@ async fn web_search(query: String) -> Result<Vec<SearchResult>, String> {
 }
 
 #[tauri::command]
+async fn research_papers(query: String) -> Result<Vec<PaperResult>, String> {
+    let url = format!(
+        "https://api.openalex.org/works?search={}&per-page=5&select=id,title,authorships,publication_year,doi,primary_location,abstract_inverted_index,cited_by_count",
+        urlencoding::encode(&query)
+    );
+    let client = reqwest::Client::builder()
+        .user_agent("TrackMe/0.5 (academic research search)")
+        .build()
+        .map_err(|e| e.to_string())?;
+    let resp = client.get(url).send().await.map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("Research search failed ({})", resp.status()));
+    }
+
+    let body = resp.text().await.map_err(|e| e.to_string())?;
+    let data: serde_json::Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
+    let mut papers = Vec::new();
+    for work in data["results"].as_array().into_iter().flatten() {
+        let title = work["title"].as_str().unwrap_or("Untitled paper").trim().to_string();
+        let authors = work["authorships"]
+            .as_array()
+            .map(|items| {
+                items.iter().filter_map(|item| item["author"]["display_name"].as_str()).take(4).collect::<Vec<_>>().join(", ")
+            })
+            .unwrap_or_default();
+        let abstract_text = work["abstract_inverted_index"]
+            .as_object()
+            .map(|index| {
+                let mut words = Vec::new();
+                for (word, positions) in index {
+                    if let Some(positions) = positions.as_array() {
+                        for position in positions.iter().filter_map(|p| p.as_u64()) {
+                            words.push((position, word.as_str()));
+                        }
+                    }
+                }
+                words.sort_by_key(|(position, _)| *position);
+                words.into_iter().map(|(_, word)| word).collect::<Vec<_>>().join(" ")
+            })
+            .unwrap_or_default();
+        let url = work["primary_location"]["landing_page_url"]
+            .as_str()
+            .or_else(|| work["id"].as_str())
+            .unwrap_or("")
+            .to_string();
+        papers.push(PaperResult {
+            title,
+            authors,
+            year: work["publication_year"].as_i64().map(|year| year as i32),
+            url,
+            doi: work["doi"].as_str().map(String::from),
+            abstract_text: abstract_text.chars().take(700).collect(),
+            cited_by_count: work["cited_by_count"].as_i64().unwrap_or(0) as i32,
+        });
+    }
+    Ok(papers)
+}
+
+#[tauri::command]
 fn compute_meeting_occurrences(
     rule_json: String,
     window_start: String,
@@ -319,6 +389,7 @@ pub fn run() {
             permanent_delete_trash,
             set_vault_path,
             web_search,
+            research_papers,
         ])
         .setup(|app| {
             let show_item =

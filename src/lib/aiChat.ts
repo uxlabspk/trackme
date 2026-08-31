@@ -1,5 +1,5 @@
 import type { AiConfig, AiToolCall, AiToolDefinition, NoteFrontmatter, MeetingFrontmatter, ProjectFrontmatter, Recurrence } from "./types";
-import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolder, webSearch } from "./bridge";
+import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolder, webSearch, researchPapers } from "./bridge";
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter";
 import { parseTodoFile, serializeTodoFile, addTodoItem, toggleTodoItem, removeTodoItem } from "./todos";
 import { parseProjectFile, serializeProjectFile, addTask, moveTask, removeTask } from "./projects";
@@ -279,6 +279,17 @@ export const VAULT_TOOLS: AiToolDefinition[] = [
       type: "object",
       properties: {
         query: { type: "string", description: "The search query" },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "research_papers",
+    description: "Search academic research papers using OpenAlex. Use for scholarly sources, literature reviews, study references, and research questions. No API key is required. Cite results as [P1], [P2], etc. in your response.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Focused academic search query" },
       },
       required: ["query"],
     },
@@ -656,6 +667,18 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
       return results.map((r, i) => `${i + 1}. [${r.title}](${r.url})\n${r.snippet}`).join("\n\n");
     }
 
+    case "research_papers": {
+      const papers = await researchPapers(args.query as string);
+      if (papers.length === 0) return "No research papers found.";
+      return papers.map((paper, i) => {
+        const authors = paper.authors || "Unknown authors";
+        const year = paper.year ? ` (${paper.year})` : "";
+        const doi = paper.doi ? `\nDOI: ${paper.doi}` : "";
+        const abstract = paper.abstract_text ? `\nAbstract: ${paper.abstract_text}` : "";
+        return `[P${i + 1}] **${paper.title}**${year}\nAuthors: ${authors}\nURL: ${paper.url}${doi}\nCited by: ${paper.cited_by_count}${abstract}`;
+      }).join("\n\n");
+    }
+
     default:
       return `Unknown tool: ${name}`;
   }
@@ -870,6 +893,7 @@ When the user asks about their notes, meetings, todos, or projects, use the avai
 - List, read, create, add tasks to, move tasks in, delete projects
 - Create folders to organize items into subcategories
 - Search the web for current information using web_search
+- Search academic papers and provide citations using research_papers
 
 ### 3. WEB SEARCH MODE (use web_search tool)
 When the user asks about current events, recent news, latest information, or anything you're unsure about because your training data may be outdated, use the web_search tool to find up-to-date information. Examples:
@@ -879,6 +903,9 @@ When the user asks about current events, recent news, latest information, or any
 - Any question where you're unsure about current facts → web_search with a good query
 
 Always search when the user asks about recent events, current prices, latest releases, ongoing situations, or anything time-sensitive. Do NOT guess or make up information about current events.
+
+### 4. RESEARCH MODE (use research_papers tool)
+When the user asks for academic papers, scholarly evidence, literature reviews, research references, or a research topic, use research_papers. After receiving results, answer using the evidence and cite claims with [P1], [P2], etc. Include a brief "References" section at the end listing the papers you cited. Do not invent citations or claim a paper says something not supported by its metadata or abstract.
 
 ## HANDLING CREATION REQUESTS:
 When the user asks you to create, draft, or write something (like a story, essay, plan, letter, etc.), you have two options:

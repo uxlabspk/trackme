@@ -90,3 +90,17 @@ export interface SearchResult {
 export async function webSearch(query: string): Promise<SearchResult[]> {
   return invoke<SearchResult[]>("web_search", { query });
 }
+
+export interface PaperResult {
+  title: string;
+  authors: string;
+  year?: number;
+  url: string;
+  doi?: string;
+  abstract_text: string;
+  cited_by_count: number;
+}
+
+export async function researchPapers(query: string): Promise<PaperResult[]> {
+  return invoke<PaperResult[]>("research_papers", { query });
+}
