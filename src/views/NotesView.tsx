@@ -17,10 +17,12 @@ interface Props {
   onSearchHandled?: () => void;
   sidebarSlot: HTMLDivElement | null;
   triggerCreate?: number;
+  triggerFolderCreate?: number;
   onCreateConsumed?: () => void;
+  onFolderCreateConsumed?: () => void;
 }
 
-export default function NotesView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot, triggerCreate, onCreateConsumed }: Props) {
+export default function NotesView({ vaultPath, searchTarget, onSearchHandled, sidebarSlot, triggerCreate, triggerFolderCreate, onCreateConsumed, onFolderCreateConsumed }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState<NoteFile | null>(null);
@@ -63,6 +65,13 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled, si
       onCreateConsumed?.();
     }
   }, [triggerCreate, onCreateConsumed]);
+
+  useEffect(() => {
+    if (triggerFolderCreate && triggerFolderCreate > 0) {
+      openFolderDialog();
+      onFolderCreateConsumed?.();
+    }
+  }, [triggerFolderCreate, onFolderCreateConsumed]);
 
   useEffect(() => {
     if (!selected) {

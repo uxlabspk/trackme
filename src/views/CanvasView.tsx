@@ -13,7 +13,9 @@ interface Props {
   vaultPath: string;
   sidebarSlot: HTMLDivElement | null;
   triggerCreate?: number;
+  triggerFolderCreate?: number;
   onCreateConsumed?: () => void;
+  onFolderCreateConsumed?: () => void;
 }
 
 const CANVAS_DIR = "canvas";
@@ -37,7 +39,7 @@ const SHAPE_ICONS: Record<string, React.ReactNode> = { text: <Type size={14} />,
 type Handle = "nw" | "ne" | "sw" | "se";
 const HANDLE = 8;
 
-export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, onCreateConsumed }: Props) {
+export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, triggerFolderCreate, onCreateConsumed, onFolderCreateConsumed }: Props) {
   const [tree, setTree] = useState<VaultEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [canvasData, setCanvasData] = useState<CanvasData>({ nodes: [], edges: [] });
@@ -75,6 +77,13 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, onCr
       onCreateConsumed?.();
     }
   }, [triggerCreate, onCreateConsumed]);
+
+  useEffect(() => {
+    if (triggerFolderCreate && triggerFolderCreate > 0) {
+      setFolderOpen(true);
+      onFolderCreateConsumed?.();
+    }
+  }, [triggerFolderCreate, onFolderCreateConsumed]);
 
   useEffect(() => {
     if (!selected) { setCanvasData({ nodes: [], edges: [] }); return; }

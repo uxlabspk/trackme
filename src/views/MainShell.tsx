@@ -53,6 +53,10 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
     projects: 0,
     canvas: 0,
   });
+  const [createFolderSignal, setCreateFolderSignal] = useState<Record<"notes" | "canvas", number>>({
+    notes: 0,
+    canvas: 0,
+  });
   const { theme, toggleTheme } = useTheme();
   const vaultName = vaultPath.split(/[/\\]/).filter(Boolean).pop() ?? "Vault";
 
@@ -102,8 +106,17 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
     setCreateSignal((prev) => ({ ...prev, [id]: prev[id] + 1 }));
   }, []);
 
+  const fireFolderCreateFor = useCallback((id: "notes" | "canvas") => {
+    setTab(id);
+    setCreateFolderSignal((prev) => ({ ...prev, [id]: prev[id] + 1 }));
+  }, []);
+
   const consumeCreateSignal = useCallback((id: "notes" | "meetings" | "todos" | "projects" | "canvas") => {
     setCreateSignal((prev) => ({ ...prev, [id]: 0 }));
+  }, []);
+
+  const consumeFolderCreateSignal = useCallback((id: "notes" | "canvas") => {
+    setCreateFolderSignal((prev) => ({ ...prev, [id]: 0 }));
   }, []);
 
   const mainTabs = TABS.filter((t) => t.group === "main");
@@ -113,6 +126,7 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
     const setter = listSetters[t.id];
     const active = tab === t.id;
     const canCreate = (t.id === "notes" || t.id === "meetings" || t.id === "todos" || t.id === "projects" || t.id === "canvas");
+    const canCreateFolder = (t.id === "notes" || t.id === "canvas");
     return (
       <Fragment key={t.id}>
         <div
@@ -132,18 +146,35 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             {t.label}
           </button>
           {canCreate && active && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                fireCreateFor(t.id as "notes" | "meetings" | "todos" | "projects" | "canvas");
-              }}
-              className="nav-inline-action"
-              title={`Create new ${t.label.toLowerCase().slice(0, -1)}`}
-              aria-label={`Create new ${t.label.toLowerCase().slice(0, -1)}`}
-            >
-              +
-            </button>
+            <>
+              {canCreateFolder && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fireFolderCreateFor(t.id as "notes" | "canvas");
+                  }}
+                  className="nav-inline-action"
+                  title={`Create new folder in ${t.label}`}
+                  aria-label={`Create new folder in ${t.label}`}
+                  style={{ fontSize: 13, lineHeight: 1, padding: "0 8px" }}
+                >
+                  ▸
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fireCreateFor(t.id as "notes" | "meetings" | "todos" | "projects" | "canvas");
+                }}
+                className="nav-inline-action"
+                title={`Create new ${t.label.toLowerCase().slice(0, -1)}`}
+                aria-label={`Create new ${t.label.toLowerCase().slice(0, -1)}`}
+              >
+                +
+              </button>
+            </>
           )}
         </div>
         {setter && (
@@ -316,7 +347,9 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             onSearchHandled={clearSearchTarget}
             sidebarSlot={notesSlot}
             triggerCreate={createSignal.notes}
+            triggerFolderCreate={createFolderSignal.notes}
             onCreateConsumed={() => consumeCreateSignal("notes")}
+            onFolderCreateConsumed={() => consumeFolderCreateSignal("notes")}
           />
         )}
         {tab === "graph" && <GraphView vaultPath={vaultPath} />}
@@ -325,7 +358,9 @@ export default function MainShell({ vaultPath, onVaultSwitch }: Props) {
             vaultPath={vaultPath}
             sidebarSlot={canvasSlot}
             triggerCreate={createSignal.canvas}
+            triggerFolderCreate={createFolderSignal.canvas}
             onCreateConsumed={() => consumeCreateSignal("canvas")}
+            onFolderCreateConsumed={() => consumeFolderCreateSignal("canvas")}
           />
         )}
         {tab === "meetings" && (
