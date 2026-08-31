@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AiConfig, AiProvider } from "../lib/types";
 import { PROVIDER_LABELS, providerNeedsKey, getProviderDefaults, getAllDefaultModels } from "../lib/aiConfig";
 import Dialog from "./Dialog";
@@ -17,6 +17,33 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
   const [model, setModel] = useState(config.model);
   const [apiKey, setApiKey] = useState(config.apiKey);
   const [baseUrl, setBaseUrl] = useState(config.baseUrl);
+  const [openrouterModels, setOpenrouterModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+
+  useEffect(() => {
+    if (provider !== "openrouter" || !apiKey) {
+      setOpenrouterModels([]);
+      return;
+    }
+    let cancelled = false;
+    setModelsLoading(true);
+    fetch("https://openrouter.ai/api/v1/models", {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const ids = (data?.data ?? []).map((m: { id: string }) => m.id).sort();
+        setOpenrouterModels(ids);
+      })
+      .catch(() => {
+        if (!cancelled) setOpenrouterModels([]);
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [provider, apiKey]);
 
   function handleProviderChange(p: AiProvider) {
     setProvider(p);
@@ -94,19 +121,34 @@ export default function AiSettingsModal({ open, config, onClose, onSave }: Props
 
         <div>
           <label style={labelStyle}>Model</label>
-          <input
-            autoFocus
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            placeholder={getProviderDefaults(provider).model || "e.g. local-model"}
-            style={inputStyle}
-          />
+          {provider === "openrouter" && openrouterModels.length > 0 ? (
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Select a model...</option>
+              {openrouterModels.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              autoFocus
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder={getProviderDefaults(provider).model || "e.g. local-model"}
+              style={inputStyle}
+            />
+          )}
           <div style={hintStyle}>
             {provider === "lmstudio" && "LM Studio uses OpenAI-compatible API. Load a model in LM Studio first."}
             {provider === "ollama" && "Ollama exposes an OpenAI-compatible API. Pull a model with 'ollama pull' first."}
             {provider === "openai" && "e.g. gpt-4o, gpt-4o-mini, gpt-3.5-turbo"}
             {provider === "anthropic" && "e.g. claude-sonnet-4-20250514, claude-3-haiku-20240307"}
-            {provider === "openrouter" && "Browse models at openrouter.ai/models"}
+            {provider === "openrouter" && modelsLoading && "Fetching available models..."}
+            {provider === "openrouter" && !modelsLoading && openrouterModels.length === 0 && apiKey && "Failed to fetch models. Check your API key."}
+            {provider === "openrouter" && !modelsLoading && openrouterModels.length === 0 && !apiKey && "Enter an API key to see available models."}
             {provider === "llamacpp" && "llama.cpp server exposes OpenAI-compatible API. Load a model with --model first."}
           </div>
         </div>
