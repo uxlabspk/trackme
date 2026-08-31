@@ -202,51 +202,9 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled, si
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              padding: "16px 14px 8px",
+              padding: "0px 14px 8px",
             }}
           >
-            <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
-              NOTES
-            </h2>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button
-                onClick={openFolderDialog}
-                title="New folder"
-                className="note-header-btn"
-                style={{
-                  border: "1px solid var(--hairline-strong)",
-                  background: "var(--paper-raised)",
-                  borderRadius: "var(--radius-sm)",
-                  width: 24,
-                  height: 24,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--moss)",
-                }}
-              >
-                <FolderPlus size={14} />
-              </button>
-              <button
-                onClick={openNewDialog}
-                title="New note"
-                className="note-header-btn"
-                style={{
-                  border: "1px solid var(--hairline-strong)",
-                  background: "var(--paper-raised)",
-                  borderRadius: "var(--radius-sm)",
-                  width: 24,
-                  height: 24,
-                  cursor: "pointer",
-                  fontSize: 15,
-                  lineHeight: 1,
-                  color: "var(--moss)",
-                }}
-              >
-                +
-              </button>
-            </div>
           </div>
           <FileTreeList
             entries={tree}

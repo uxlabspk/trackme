@@ -298,29 +298,9 @@ export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
     <div style={{ height: "100%" }}>
       {sidebarSlot && createPortal(
         <>
-          <div style={{ padding: "14px 12px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ fontSize: 12, fontWeight: 700, margin: 0, color: "var(--ink-soft)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              History
-            </h2>
-            <button
-              onClick={handleNewChat}
-              title="New chat"
-              style={{
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 22,
-                height: 22,
-                cursor: "pointer",
-                fontSize: 14,
-                color: "var(--accent-info)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Plus size={12} />
-            </button>
+          <div style={{ padding: "0px 12px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            
+            
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", padding: "0 6px 12px" }}>

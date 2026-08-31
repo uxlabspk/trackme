@@ -140,28 +140,10 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled, si
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              padding: "16px 14px 8px",
+              padding: "0px 14px 8px",
             }}
           >
-            <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>
-              TODO LISTS
-            </h2>
-            <button
-              onClick={openNewDialog}
-              title="New todo list"
-              style={{
-                border: "1px solid var(--hairline-strong)",
-                background: "var(--paper-raised)",
-                borderRadius: "var(--radius-sm)",
-                width: 24,
-                height: 24,
-                cursor: "pointer",
-                fontSize: 15,
-                color: "var(--slate)",
-              }}
-            >
-              +
-            </button>
+
           </div>
           <FileTreeList
             entries={tree}

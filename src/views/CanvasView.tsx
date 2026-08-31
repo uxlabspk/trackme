@@ -317,12 +317,7 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, trig
     <div style={{ height: "100%" }}>
       {sidebarSlot && createPortal(
         <>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 14px 8px" }}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink-soft)" }}>CANVAS</h2>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => { setFolderName(""); setFolderOpen(true); }} title="New folder" style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--moss)" }}><FolderPlus size={14} /></button>
-              <button onClick={() => { setNewTitle(""); setNewOpen(true); }} title="New canvas" style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", width: 24, height: 24, cursor: "pointer", fontSize: 15, lineHeight: 1, color: "var(--moss)" }}>+</button>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0px 14px 8px" }}>
           </div>
           <FileTreeList entries={tree} selectedRelPath={selected} onSelect={setSelected} selectedFolderRelPath={currentFolder} onSelectFolder={setCurrentFolder} onDeleteFolder={handleDeleteFolder} emptyLabel="No canvases yet — click + to add one" expandedIds={expandedIds} onToggleFolder={toggleFolder} />
         </>,
