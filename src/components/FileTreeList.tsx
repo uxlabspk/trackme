@@ -11,6 +11,8 @@ interface Props {
   selectedFolderRelPath?: string | null;
   onSelectFolder?: (relPath: string) => void;
   onDeleteFolder?: (relPath: string) => void;
+  expandedIds?: Set<string>;
+  onToggleFolder?: (relPath: string) => void;
 }
 
 export default function FileTreeList({
@@ -22,6 +24,8 @@ export default function FileTreeList({
   selectedFolderRelPath = null,
   onSelectFolder,
   onDeleteFolder,
+  expandedIds,
+  onToggleFolder,
 }: Props) {
   if (entries.length === 0 && depth === 0) {
     return (
@@ -54,6 +58,8 @@ export default function FileTreeList({
               onSelectFolder={onSelectFolder}
               onDeleteFolder={onDeleteFolder}
               depth={depth}
+              expandedIds={expandedIds}
+              onToggleFolder={onToggleFolder}
             />
           ) : (
             <button
@@ -111,6 +117,8 @@ function FolderRow({
   onSelectFolder,
   onDeleteFolder,
   depth,
+  expandedIds,
+  onToggleFolder,
 }: {
   entry: VaultEntry;
   selectedRelPath: string | null;
@@ -119,8 +127,18 @@ function FolderRow({
   onSelectFolder?: (p: string) => void;
   onDeleteFolder?: (p: string) => void;
   depth: number;
+  expandedIds?: Set<string>;
+  onToggleFolder?: (relPath: string) => void;
 }) {
-  const [open, setOpen] = useState(true);
+  const isControlled = expandedIds !== undefined;
+  const [localOpen, setLocalOpen] = useState(true);
+  const open = isControlled ? expandedIds.has(entry.rel_path) : localOpen;
+
+  const toggle = () => {
+    if (isControlled) onToggleFolder?.(entry.rel_path);
+    else setLocalOpen((o) => !o);
+  };
+
   const isSelected = selectedFolderRelPath === entry.rel_path;
 
   return (
@@ -137,7 +155,7 @@ function FolderRow({
         }}
       >
         <button
-          onClick={() => setOpen((o) => !o)}
+          onClick={toggle}
           style={{
             border: "none",
             background: "transparent",
@@ -208,6 +226,8 @@ function FolderRow({
           onSelectFolder={onSelectFolder}
           onDeleteFolder={onDeleteFolder}
           depth={depth + 1}
+          expandedIds={expandedIds}
+          onToggleFolder={onToggleFolder}
         />
       )}
     </>

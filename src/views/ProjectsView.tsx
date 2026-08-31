@@ -18,6 +18,7 @@ import {
   updateTaskDescription,
   updateTaskTitle,
 } from "../lib/projects";
+import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { ProjectFile, ProjectTask, VaultEntry } from "../lib/types";
 import { GripVertical, Plus, Trash2, X } from "lucide-react";
 
@@ -52,6 +53,7 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled,
   const [newColumnName, setNewColumnName] = useState("");
 
   const dragMoved = useRef(false);
+  const { expandedIds, toggleFolder } = useSidebarTree(vaultPath, "projects", tree, searchTarget);
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "projects"));
@@ -238,6 +240,8 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled,
             selectedRelPath={selected}
             onSelect={setSelected}
             emptyLabel="No projects yet"
+            expandedIds={expandedIds}
+            onToggleFolder={toggleFolder}
           />
         </>,
         sidebarSlot

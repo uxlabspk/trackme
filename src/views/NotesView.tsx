@@ -6,6 +6,7 @@ import Dialog from "../components/Dialog";
 import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFolder, writeFile } from "../lib/bridge";
 import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
+import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
 import { FolderPlus, Trash2 } from "lucide-react";
 import "../styles/milkdown.css";
@@ -30,6 +31,7 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled, si
   const saveTimer = useRef<number | null>(null);
   const [confirmDeleteNote, setConfirmDeleteNote] = useState(false);
   const [confirmDeleteFolder, setConfirmDeleteFolder] = useState<string | null>(null);
+  const { expandedIds, toggleFolder } = useSidebarTree(vaultPath, "notes", tree, searchTarget);
 
   const refreshTree = useCallback(async () => {
     const entries = await listVaultFolder(vaultPath, "notes");
@@ -236,6 +238,8 @@ export default function NotesView({ vaultPath, searchTarget, onSearchHandled, si
             onSelectFolder={setCurrentFolder}
             onDeleteFolder={handleDeleteFolder}
             emptyLabel="No notes yet — click + to add one"
+            expandedIds={expandedIds}
+            onToggleFolder={toggleFolder}
           />
         </div>,
         sidebarSlot

@@ -5,6 +5,7 @@ import Dialog from "../components/Dialog";
 import { COLORS, FONTS, SHAPES, nextId, type CanvasData, type CanvasNode, type CanvasShape } from "../lib/canvas";
 import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFolder, writeFile } from "../lib/bridge";
 import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/path";
+import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { VaultEntry } from "../lib/types";
 import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link, FolderPlus } from "lucide-react";
 
@@ -54,6 +55,7 @@ export default function CanvasView({ vaultPath, sidebarSlot }: Props) {
   const panRef = useRef<{ sx: number; sy: number; px: number; py: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const saveTimer = useRef<number | null>(null);
+  const { expandedIds, toggleFolder } = useSidebarTree(vaultPath, "canvas", tree);
 
   const refreshTree = useCallback(async () => {
     const entries = await listVaultFolder(vaultPath, CANVAS_DIR);
@@ -302,7 +304,7 @@ export default function CanvasView({ vaultPath, sidebarSlot }: Props) {
               <button onClick={() => { setNewTitle(""); setNewOpen(true); }} title="New canvas" style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", width: 24, height: 24, cursor: "pointer", fontSize: 15, lineHeight: 1, color: "var(--moss)" }}>+</button>
             </div>
           </div>
-          <FileTreeList entries={tree} selectedRelPath={selected} onSelect={setSelected} selectedFolderRelPath={currentFolder} onSelectFolder={setCurrentFolder} onDeleteFolder={handleDeleteFolder} emptyLabel="No canvases yet — click + to add one" />
+          <FileTreeList entries={tree} selectedRelPath={selected} onSelect={setSelected} selectedFolderRelPath={currentFolder} onSelectFolder={setCurrentFolder} onDeleteFolder={handleDeleteFolder} emptyLabel="No canvases yet — click + to add one" expandedIds={expandedIds} onToggleFolder={toggleFolder} />
         </>,
         sidebarSlot
       )}

@@ -13,6 +13,7 @@ import {
 } from "../lib/bridge";
 import { uniquePath, slugify } from "../lib/path";
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
+import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { MeetingFile, MeetingFrontmatter, Recurrence, VaultEntry } from "../lib/types";
 import { PanelRightClose, PanelRightOpen, Trash2 } from "lucide-react";
 
@@ -76,6 +77,7 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled,
   const [occurrencesOpen, setOccurrencesOpen] = useState(true);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const saveTimerRef = useRef<number | null>(null);
+  const { expandedIds, toggleFolder } = useSidebarTree(vaultPath, "meetings", tree, searchTarget);
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "meetings"));
@@ -229,6 +231,8 @@ export default function MeetingsView({ vaultPath, searchTarget, onSearchHandled,
             selectedRelPath={selected}
             onSelect={setSelected}
             emptyLabel="No meeting series yet"
+            expandedIds={expandedIds}
+            onToggleFolder={toggleFolder}
           />
         </>,
         sidebarSlot

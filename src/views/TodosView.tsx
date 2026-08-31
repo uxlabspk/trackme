@@ -12,6 +12,7 @@ import {
   serializeTodoFile,
   toggleTodoItem,
 } from "../lib/todos";
+import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { TodoFile, VaultEntry } from "../lib/types";
 import { Trash2 } from "lucide-react";
 
@@ -29,6 +30,7 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled, si
   const [newItemText, setNewItemText] = useState("");
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState("");
+  const { expandedIds, toggleFolder } = useSidebarTree(vaultPath, "todos", tree, searchTarget);
 
   const refreshTree = useCallback(async () => {
     setTree(await listVaultFolder(vaultPath, "todos"));
@@ -157,6 +159,8 @@ export default function TodosView({ vaultPath, searchTarget, onSearchHandled, si
             selectedRelPath={selected}
             onSelect={setSelected}
             emptyLabel="No todo lists yet"
+            expandedIds={expandedIds}
+            onToggleFolder={toggleFolder}
           />
         </div>,
         sidebarSlot
