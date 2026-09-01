@@ -1,5 +1,5 @@
 import type { AiConfig, AiToolCall, AiToolDefinition, NoteFrontmatter, MeetingFrontmatter, ProjectFrontmatter, Recurrence } from "./types";
-import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolder, webSearch, researchPapers } from "./bridge";
+import { readFile, writeFile, deleteFile, joinPath, listVaultFolder, createFolder, webSearch, researchPapers, searchJobs } from "./bridge";
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter";
 import { parseTodoFile, serializeTodoFile, addTodoItem, toggleTodoItem, removeTodoItem } from "./todos";
 import { parseProjectFile, serializeProjectFile, addTask, moveTask, removeTask } from "./projects";
@@ -290,6 +290,18 @@ export const VAULT_TOOLS: AiToolDefinition[] = [
       type: "object",
       properties: {
         query: { type: "string", description: "Focused academic search query" },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "search_jobs",
+    description: "Search for job listings from Google Jobs. Use when the user asks about job opportunities, job openings, hiring, or career positions. Returns job titles, companies, locations, and apply links.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Job search query (e.g. 'software engineer', 'product manager', 'data scientist')" },
+        location: { type: "string", description: "Optional location filter (e.g. 'New York', 'Remote', 'San Francisco')" },
       },
       required: ["query"],
     },
@@ -679,6 +691,18 @@ export async function executeTool(name: string, args: Record<string, unknown>, v
       }).join("\n\n");
     }
 
+    case "search_jobs": {
+      const jobs = await searchJobs(args.query as string, args.location as string | undefined);
+      if (jobs.length === 0) return "No job listings found.";
+      return jobs.map((job, i) => {
+        const salary = job.salary ? `\nSalary: ${job.salary}` : "";
+        const posted = job.posted ? `\nPosted: ${job.posted}` : "";
+        const source = job.source ? `\nSource: ${job.source}` : "";
+        const snippet = job.snippet ? `\n${job.snippet}` : "";
+        return `[J${i + 1}] **${job.title}** at ${job.company}\nLocation: ${job.location || "Not specified"}\nApply: ${job.url}${salary}${posted}${source}${snippet}`;
+      }).join("\n\n");
+    }
+
     default:
       return `Unknown tool: ${name}`;
   }
@@ -907,6 +931,15 @@ Always search when the user asks about recent events, current prices, latest rel
 ### 4. RESEARCH MODE (use research_papers tool)
 When the user asks for academic papers, scholarly evidence, literature reviews, research references, or a research topic, use research_papers. After receiving results, answer using the evidence and cite claims with [P1], [P2], etc. Include a brief "References" section at the end listing the papers you cited. Do not invent citations or claim a paper says something not supported by its metadata or abstract.
 
+### 5. JOB SEARCH MODE (use search_jobs tool)
+When the user asks about job opportunities, job openings, hiring, careers, positions, employment, or wants to find jobs, use the search_jobs tool. After receiving results, present them clearly with company names, locations, and apply links. Cite results as [J1], [J2], etc. Examples:
+- "Find me remote React developer jobs" → search_jobs("React developer", "Remote")
+- "What product manager positions are available in New York?" → search_jobs("product manager", "New York")
+- "Show me data scientist jobs" → search_jobs("data scientist")
+- "Are there any hiring for software engineers?" → search_jobs("software engineer")
+
+Always search when the user asks about jobs, careers, hiring, employment, or job opportunities.
+
 ## HANDLING CREATION REQUESTS:
 When the user asks you to create, draft, or write something (like a story, essay, plan, letter, etc.), you have two options:
 1. **Just respond with the content** — if they just want to see it in chat
@@ -1120,18 +1153,42 @@ export async function sendChatMessageStream(
       const followUpResp = await fetch(endpoint, {
         method: "POST",
         headers,
-        body: JSON.stringify({ model: config.model, messages: currentMessages, tools: streamTools, tool_choice: "auto" }),
+        body: JSON.stringify({ model: config.model, messages: currentMessages, tools: streamTools, tool_choice: "auto", stream: true }),
       });
 
       if (followUpResp.ok) {
-        // If follow-up also streams, we could stream it too, but for simplicity use non-streaming for follow-up
-        const followUpData = await followUpResp.json() as ChatCompletionResponse;
-        const followChoice = followUpData.choices?.[0];
-        const followContent = followChoice?.message?.content ?? "";
-        if (followContent) {
-          fullContent += (fullContent ? "\n\n" : "") + followContent;
-          // Send the follow-up content as tokens
-          callbacks.onToken(followContent);
+        const followReader = followUpResp.body?.getReader();
+        if (followReader) {
+          const followDecoder = new TextDecoder();
+          let followBuffer = "";
+          let followContent = "";
+
+          try {
+            while (true) {
+              if (signal?.aborted) break;
+              const { done, value } = await followReader.read();
+              if (done) break;
+
+              followBuffer += followDecoder.decode(value, { stream: true });
+              const lines = followBuffer.split("\n");
+              followBuffer = lines.pop() ?? "";
+
+              for (const line of lines) {
+                const data = parseSSELine(line);
+                const content = (data?.choices as Array<{ delta?: { content?: string } }> | undefined)?.[0]?.delta?.content;
+                if (content) {
+                  followContent += content;
+                  callbacks.onToken(content);
+                }
+              }
+            }
+          } finally {
+            followReader.releaseLock();
+          }
+
+          if (followContent) {
+            fullContent += (fullContent ? "\n\n" : "") + followContent;
+          }
         }
       }
     } catch {

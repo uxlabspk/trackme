@@ -104,3 +104,18 @@ export interface PaperResult {
 export async function researchPapers(query: string): Promise<PaperResult[]> {
   return invoke<PaperResult[]>("research_papers", { query });
 }
+
+export interface JobResult {
+  title: string;
+  company: string;
+  location: string;
+  url: string;
+  snippet: string;
+  source: string;
+  salary?: string;
+  posted?: string;
+}
+
+export async function searchJobs(query: string, location?: string): Promise<JobResult[]> {
+  return invoke<JobResult[]>("search_jobs", { query, location: location || null });
+}

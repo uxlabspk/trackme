@@ -53,7 +53,7 @@ function serializeSession(session: AiSession): string {
       for (const tc of msg.toolCalls) {
         const argsStr = JSON.stringify(tc.arguments);
         const resultStr = tc.result ?? "(pending)";
-        lines.push(`- ${tc.name}: ${argsStr} → ${resultStr}`);
+        lines.push(`- ${tc.name}: ${argsStr} → ${JSON.stringify(resultStr)}`);
       }
       lines.push("");
     }
@@ -135,15 +135,23 @@ function parseSession(raw: string, fallbackId: string): AiSession {
         } catch {
           args = { raw: tcMatch[2] };
         }
+        let result = tcMatch[3];
+        try {
+          result = JSON.parse(result) as string;
+        } catch {
+          // Support tool calls saved by older versions.
+        }
         currentToolCalls.push({
           id: `${id}-tc-${currentToolCalls.length}`,
           name: tcMatch[1],
           arguments: args,
-          result: tcMatch[3],
+          result,
         });
       }
       continue;
     }
+
+    if (inToolCalls) continue;
 
     contentLines.push(line);
   }
