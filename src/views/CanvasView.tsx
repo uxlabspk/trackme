@@ -7,7 +7,7 @@ import { createFolder, joinPath, listVaultFolder, readFile, trashFile, trashFold
 import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/path";
 import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { VaultEntry } from "../lib/types";
-import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link, FolderPlus } from "lucide-react";
+import { Circle, Square, Triangle, Type, Trash2, MousePointer, Link } from "lucide-react";
 
 interface Props {
   vaultPath: string;
@@ -53,6 +53,7 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, trig
   const [zoom, setZoom] = useState(1);
   const [currentFolder, setCurrentFolder] = useState(CANVAS_DIR);
   const [newOpen, setNewOpen] = useState(false);
+  const [confirmDeleteCanvas, setConfirmDeleteCanvas] = useState(false);
   const [confirmDeleteFolder, setConfirmDeleteFolder] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [folderOpen, setFolderOpen] = useState(false);
@@ -139,6 +140,11 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, trig
     setConfirmDeleteFolder(relPath);
   }
 
+  function handleDeleteCanvas() {
+    if (!selected) return;
+    setConfirmDeleteCanvas(true);
+  }
+
   async function doConfirmDeleteFolder() {
     if (!confirmDeleteFolder) return;
     const relPath = confirmDeleteFolder;
@@ -146,6 +152,15 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, trig
     await trashFolder(vaultPath, relPath);
     if (currentFolder === relPath || currentFolder.startsWith(`${relPath}/`)) setCurrentFolder(CANVAS_DIR);
     if (selected && (selected === relPath || selected.startsWith(`${relPath}/`))) setSelected(null);
+    await refreshTree();
+  }
+
+  async function doConfirmDeleteCanvas() {
+    if (!selected) return;
+    setConfirmDeleteCanvas(false);
+    await trashFile(vaultPath, selected);
+    setSelected(null);
+    setCurrentFolder(CANVAS_DIR);
     await refreshTree();
   }
 
@@ -356,7 +371,7 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, trig
             }}
           >
 
-            <svg height="80px" width="80px" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" 
+            <svg height="80px" width="80px" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 512 512" >
               <g>
                 <path className="st0" d="M433.803,171.939c-2.142-3.556-4.324-7.127-6.72-10.714c-11.636-17.458-26.107-35.154-43.181-52.22
@@ -426,6 +441,24 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, trig
             <input value={canvasTitle} onChange={(e) => setCanvasTitle(e.target.value)} placeholder="Untitled"
               onBlur={async () => { if (!canvasTitle.trim() || !selected) return; const slug = slugify(canvasTitle.trim()); const dir = parentRelPath(selected, CANVAS_DIR); const newPath = await uniquePath(vaultPath, `${dir}/${slug}${CANVAS_EXT}`); if (newPath !== selected) { await writeFile(joinPath(vaultPath, newPath), JSON.stringify(canvasData, null, 2)); await trashFile(vaultPath, selected); await refreshTree(); setSelected(newPath); } }}
               style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 600, border: "none", outline: "none", background: "transparent", width: 160, color: "var(--ink)" }} />
+            <button
+              title="Delete canvas"
+              onClick={handleDeleteCanvas}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 30,
+                height: 30,
+                borderRadius: 6,
+                border: "1px solid #d77b72",
+                background: "var(--paper-raised)",
+                color: "#b64a42",
+                cursor: "pointer",
+              }}
+            >
+              <Trash2 size={14} />
+            </button>
             <div style={{ width: 1, height: 20, background: "var(--hairline)", margin: "0 4px" }} />
             {[{ id: "select" as const, icon: <MousePointer size={14} />, tip: "Select" }, { id: "connect" as const, icon: <Link size={14} />, tip: "Connect" }].map((t) => (
               <button key={t.id} title={t.tip} style={tool === t.id ? btnActive : btnBase} onClick={() => { setTool(t.id); setConnectFrom(null); }}
@@ -475,6 +508,20 @@ export default function CanvasView({ vaultPath, sidebarSlot, triggerCreate, trig
           </div>
         </>)}
       </div>
+
+      <Dialog
+        open={confirmDeleteCanvas}
+        title="Move to trash?"
+        onClose={() => setConfirmDeleteCanvas(false)}
+        footer={<>
+          <button onClick={() => setConfirmDeleteCanvas(false)} style={{ border: "1px solid var(--hairline-strong)", background: "var(--paper-raised)", borderRadius: "var(--radius-sm)", padding: "7px 14px", fontSize: 13, cursor: "pointer", color: "var(--ink-soft)" }}>Cancel</button>
+          <button onClick={doConfirmDeleteCanvas} style={{ border: "none", background: "#ff3b30", color: "#fff", borderRadius: "var(--radius-sm)", padding: "7px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>Move to trash</button>
+        </>}
+      >
+        <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: 14 }}>
+          &ldquo;{selected ?? "this canvas"}&rdquo; will be moved to trash.
+        </p>
+      </Dialog>
 
       {/* new canvas dialog */}
       <Dialog open={newOpen} title="New canvas" onClose={() => setNewOpen(false)} footer={<>

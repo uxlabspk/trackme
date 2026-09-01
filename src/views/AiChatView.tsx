@@ -733,7 +733,9 @@ function MessageBubble({ message }: { message: AiMessage }) {
 }
 
 function ResearchCitations({ toolCalls }: { toolCalls: AiToolCall[] }) {
-  const papers = toolCalls
+  type ResearchPaper = { id: string; title: string; year: string | undefined; authors?: string; url: string };
+
+  const papers: ResearchPaper[] = toolCalls
     .filter((toolCall) => toolCall.name === "research_papers" && toolCall.result)
     .flatMap((toolCall) => (toolCall.result ?? "").split("\n\n"))
     .map((paper) => {
@@ -741,9 +743,15 @@ function ResearchCitations({ toolCalls }: { toolCalls: AiToolCall[] }) {
       const match = lines[0]?.match(/^\[P(\d+)\] \*\*(.+?)\*\*(?: \((\d{4})\))?$/);
       const url = lines.find((line) => line.startsWith("URL: "))?.slice(5).trim();
       if (!match || !url) return null;
-      return { id: match[1], title: match[2], year: match[3], authors: lines.find((line) => line.startsWith("Authors: "))?.slice(9).trim(), url };
+      return {
+        id: match[1],
+        title: match[2],
+        year: match[3],
+        authors: lines.find((line) => line.startsWith("Authors: "))?.slice(9).trim(),
+        url,
+      } as ResearchPaper;
     })
-    .filter((paper): paper is { id: string; title: string; year?: string; authors?: string; url: string } => paper !== null);
+    .filter((paper): paper is ResearchPaper => paper !== null);
 
   if (papers.length === 0) return null;
 

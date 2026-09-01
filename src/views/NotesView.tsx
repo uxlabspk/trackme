@@ -8,7 +8,7 @@ import { uniquePath, slugify, sanitizeFolderName, parentRelPath } from "../lib/p
 import { parseFrontmatter, serializeFrontmatter } from "../lib/frontmatter";
 import { useSidebarTree } from "../hooks/useSidebarTree";
 import type { NoteFile, NoteFrontmatter, VaultEntry } from "../lib/types";
-import { FolderPlus, LucideStickyNotes, StickyNotes, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import "../styles/milkdown.css";
 
 interface Props {
