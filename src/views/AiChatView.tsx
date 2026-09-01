@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square, BookOpen, Sparkles, NotebookPen, CalendarDays, CheckSquare, FolderKanban, Lightbulb, type LucideIcon } from "lucide-react";
+import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square, BookOpen, Sparkles, NotebookPen, CalendarDays, CheckSquare, FolderKanban, Lightbulb, type LucideIcon, Pencil, Copy, CopyCheck } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -30,6 +30,8 @@ export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
   const [vaultContext, setVaultContext] = useState<string>("");
   const [contextLoading, setContextLoading] = useState(false);
   const [confirmDeleteSession, setConfirmDeleteSession] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -287,6 +289,127 @@ export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
     abortRef.current = null;
   }
 
+  async function handleEditSubmit() {
+    const text = editingContent.trim();
+    if (!text || loading || !editingMessageId) return;
+    if (!isAiConfigured(config)) {
+      setSettingsOpen(true);
+      return;
+    }
+
+    const editIndex = messages.findIndex((m) => m.id === editingMessageId);
+    if (editIndex < 0) return;
+
+    // Truncate at the edited message and replace with new content
+    const truncated = messages.slice(0, editIndex);
+    const editedMsg: AiMessage = { ...messages[editIndex], content: text, timestamp: Date.now() };
+    const nextMessages = [...truncated, editedMsg];
+
+    setMessages(nextMessages);
+    setEditingMessageId(null);
+    setEditingContent("");
+    setInput("");
+    setLoading(true);
+    setStreamingContent("");
+    setStreamingToolCalls([]);
+
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = generateSessionId();
+      setCurrentSessionId(sessionId);
+      setLastSessionId(sessionId);
+    }
+
+    persistSession(sessionId, nextMessages);
+
+    const abortCtrl = new AbortController();
+    abortRef.current = abortCtrl;
+
+    let finalContent = "";
+    let finalToolCalls: AiToolCall[] = [];
+
+    try {
+      const ctx = vaultContext || await buildVaultContext(vaultPath);
+      const systemPrompt = getSystemPrompt(ctx);
+
+      const apiMessages = [
+        { role: "system" as const, content: systemPrompt },
+        ...nextMessages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+      ];
+
+      const callbacks: StreamCallbacks = {
+        onToken: (token) => {
+          finalContent += token;
+          setStreamingContent(finalContent);
+        },
+        onToolCallStart: () => { },
+        onToolCallArgs: () => { },
+        onToolCallEnd: (_id, name, args, result) => {
+          const tc: AiToolCall = { id: _id, name, arguments: args, result };
+          finalToolCalls = [...finalToolCalls, tc];
+          setStreamingToolCalls([...finalToolCalls]);
+        },
+        onDone: (content, toolCalls) => {
+          finalContent = content;
+          finalToolCalls = toolCalls;
+        },
+        onError: (err) => {
+          const errMsg: AiMessage = { id: genId(), role: "system", content: `Error: ${err.message}`, timestamp: Date.now() };
+          const allMsgs = [...nextMessages, errMsg];
+          setMessages(allMsgs);
+          persistSession(sessionId!, allMsgs);
+          setLoading(false);
+          setStreamingContent("");
+          setStreamingToolCalls([]);
+        },
+      };
+
+      await sendChatMessageStream(config, apiMessages, VAULT_TOOLS, vaultPath, callbacks, abortCtrl.signal);
+
+      const assistantMsg: AiMessage = {
+        id: genId(),
+        role: "assistant",
+        content: finalContent,
+        toolCalls: finalToolCalls.length > 0 ? finalToolCalls : undefined,
+        timestamp: Date.now(),
+      };
+      const allMessages = [...nextMessages, assistantMsg];
+      setMessages(allMessages);
+      setStreamingContent("");
+      setStreamingToolCalls([]);
+      persistSession(sessionId, allMessages);
+
+      if (finalToolCalls.length > 0) refreshContext();
+    } catch (err) {
+      if (abortCtrl.signal.aborted) {
+        if (finalContent) {
+          const assistantMsg: AiMessage = {
+            id: genId(), role: "assistant", content: finalContent,
+            toolCalls: finalToolCalls.length > 0 ? finalToolCalls : undefined,
+            timestamp: Date.now(),
+          };
+          const allMsgs = [...nextMessages, assistantMsg];
+          setMessages(allMsgs);
+          persistSession(sessionId!, allMsgs);
+        }
+      } else {
+        const errMsg: AiMessage = {
+          id: genId(), role: "system",
+          content: `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
+          timestamp: Date.now(),
+        };
+        const allMsgs = [...nextMessages, errMsg];
+        setMessages(allMsgs);
+        persistSession(sessionId!, allMsgs);
+      }
+    } finally {
+      setLoading(false);
+      setStreamingContent("");
+      setStreamingToolCalls([]);
+      abortRef.current = null;
+    }
+  }
+
   function handleSaveConfig(newConfig: AiConfig) {
     setConfig(newConfig);
     saveAiConfig(newConfig);
@@ -458,6 +581,13 @@ export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
               <MessageBubble
                 key={msg.id}
                 message={msg}
+                isEditing={editingMessageId === msg.id}
+                editingContent={editingMessageId === msg.id ? editingContent : ""}
+                onEditStart={(id, content) => { setEditingMessageId(id); setEditingContent(content); }}
+                onEditChange={setEditingContent}
+                onEditSubmit={handleEditSubmit}
+                onEditCancel={() => { setEditingMessageId(null); setEditingContent(""); }}
+                disabled={loading}
               />
             );
           })}
@@ -637,9 +767,19 @@ function genId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function MessageBubble({ message }: { message: AiMessage }) {
+function MessageBubble({ message, isEditing, editingContent, onEditStart, onEditChange, onEditSubmit, onEditCancel, disabled }: {
+  message: AiMessage;
+  isEditing: boolean;
+  editingContent: string;
+  onEditStart: (id: string, content: string) => void;
+  onEditChange: (v: string) => void;
+  onEditSubmit: () => void;
+  onEditCancel: () => void;
+  disabled: boolean;
+}) {
   const [toolsExpanded, setToolsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const editRef = useRef<HTMLTextAreaElement>(null);
   const isUser = message.role === "user";
   const isError = message.role === "system";
 
@@ -673,15 +813,50 @@ function MessageBubble({ message }: { message: AiMessage }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         {isUser || isError ? (
-          <div style={{
-            fontSize: 14,
-            lineHeight: 1.6,
-            color: isError ? "var(--danger)" : "var(--ink)",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}>
-            {message.content}
-          </div>
+          isEditing ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <textarea
+                ref={editRef}
+                value={editingContent}
+                onChange={(e) => onEditChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onEditSubmit(); }
+                  if (e.key === "Escape") onEditCancel();
+                }}
+                autoFocus
+                rows={2}
+                style={{
+                  width: "100%",
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  fontFamily: "var(--font-body)",
+                  color: "var(--ink)",
+                  background: "var(--paper-raised)",
+                  border: "1px solid var(--accent-info)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "8px 10px",
+                  resize: "vertical",
+                  outline: "none",
+                }}
+              />
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={onEditSubmit} disabled={!editingContent.trim()} style={{ ...actionBtnStyle, color: editingContent.trim() ? "var(--accent-info)" : "var(--ink-soft)", cursor: editingContent.trim() ? "pointer" : "not-allowed" }}>
+                  Send
+                </button>
+                <button onClick={onEditCancel} style={actionBtnStyle}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: isError ? "var(--danger)" : "var(--ink)",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}>
+              {message.content}
+            </div>
+          )
         ) : (
           <div className="ai-markdown" style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink)", wordBreak: "break-word" }}>
             <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{message.content}</Markdown>
@@ -738,12 +913,53 @@ function MessageBubble({ message }: { message: AiMessage }) {
                 style={actionBtnStyle}
                 title="Copy"
               >
-                {copied ? <span style={{ fontSize: 11, color: "var(--moss-deep)" }}>Copied</span> : "Copy"}
+                {/* {copied ? <span style={{ fontSize: 11, color: "var(--moss-deep)" }}>Copied</span> : "Copy"} */}
+                {
+                  copied
+                    ?
+                    <CopyCheck width={13} />
+                    :
+                    <Copy width={13} />
+                }
               </button>
             </div>
           </div>
         )}
 
+        {isUser && !isError && !isEditing && (
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: 'space-between', gap: 4, marginTop: 6, opacity: 0.5, transition: "opacity 0.15s" }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = "0.5"}>
+            <div style={{ fontSize: 10, color: "var(--ink-soft)", marginTop: 4, fontFamily: "var(--font-mono)", opacity: 0.6 }}>
+              {new Date(message.timestamp).toLocaleTimeString()}
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+
+              {!disabled && (
+                <button
+                  onClick={() => onEditStart(message.id, message.content)}
+                  style={actionBtnStyle}
+                  title="Edit & resend"
+                >
+                  <Pencil width={13} />
+                </button>
+              )}
+              <button
+                onClick={() => { navigator.clipboard.writeText(message.content); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                style={actionBtnStyle}
+                title="Copy"
+              >
+                {
+                  copied
+                    ?
+                    <CopyCheck width={13} />
+                    :
+                    <Copy width={13} />
+                }
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
