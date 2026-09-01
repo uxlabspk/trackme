@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square, BookOpen } from "lucide-react";
+import { Bot, Settings, Send, Loader2, Wrench, ChevronDown, ChevronRight, RefreshCw, Plus, Trash2, MessageSquare, Square, BookOpen, Sparkles, NotebookPen, CalendarDays, CheckSquare, FolderKanban, Lightbulb, type LucideIcon } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -423,19 +423,26 @@ export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
                 animation: "fade-in 0.35s ease"
 
               }}>
-                Chat with AI to manage your vault or just have a conversation. Ask me to create notes, organize meetings, draft stories, brainstorm ideas, and more.
+                What's on you mind today! <br />
+                here are few options to get started.
               </div>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 500 }}>
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setInput(s); textareaRef.current?.focus(); }}
-                    style={suggestionStyle}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {SUGGESTIONS.map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <button
+                      key={s.label}
+                      onClick={() => { setInput(s.label); textareaRef.current?.focus(); }}
+                      style={suggestionStyle}
+                    >
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <Icon size={13} />
+                        <span>{s.label}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -812,13 +819,13 @@ function ToolCallCard({ toolCall }: { toolCall: AiToolCall }) {
   );
 }
 
-const SUGGESTIONS = [
-  "Draft a short story about a traveler",
-  "Create a note called 'Meeting Prep'",
-  "What meetings do I have today?",
-  "Add a todo item to my list",
-  "Show my projects and their status",
-  "Help me brainstorm app ideas",
+const SUGGESTIONS: { label: string; icon: LucideIcon }[] = [
+  { label: "Draft a short story about a traveler", icon: Sparkles },
+  { label: "Create a note called 'Meeting Prep'", icon: NotebookPen },
+  { label: "What meetings do I have today?", icon: CalendarDays },
+  { label: "Add a todo item to my list", icon: CheckSquare },
+  { label: "Show my projects and their status", icon: FolderKanban },
+  { label: "Help me brainstorm app ideas", icon: Lightbulb },
 ];
 
 const avatarStyle: React.CSSProperties = {
