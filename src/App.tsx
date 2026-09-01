@@ -5,6 +5,7 @@ import MainShell from "./views/MainShell";
 import { getLastVaultPath, migrateVaultConfig, getLastActiveVault, setLastActiveVault } from "./lib/appConfig";
 import { bootstrapVault, setVaultPath } from "./lib/bridge";
 import { ThemeProvider } from "./lib/ThemeContext";
+import { open } from "@tauri-apps/plugin-shell";
 
 type Screen = "loading" | "welcome" | "vault-picker" | "main";
 
@@ -55,6 +56,18 @@ export default function App() {
         setScreen("welcome");
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (anchor?.href) {
+        e.preventDefault();
+        open(anchor.href);
+      }
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
   }, []);
 
   function handleVaultSwitch(path: string) {
