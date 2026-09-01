@@ -210,6 +210,23 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled,
   const columns = project?.frontmatter.columns ?? DEFAULT_COLUMNS;
   const tasks = project?.frontmatter.tasks ?? [];
 
+
+  const kbdStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 24,
+    height: 22,
+    fontFamily: "var(--font-mono)",
+    fontSize: 11,
+    color: "var(--ink-soft)",
+    background: "var(--paper-raised)",
+    border: "1px solid var(--hairline-strong)",
+    borderRadius: 4,
+    padding: "0 6px",
+    lineHeight: 1,
+  };
+
   return (
     <div style={{ height: "100%" }}>
       {sidebarSlot && createPortal(
@@ -241,14 +258,48 @@ export default function ProjectsView({ vaultPath, searchTarget, onSearchHandled,
             style={{
               flex: 1,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--ink-soft)",
-              fontSize: 14,
+              gap: 24,
               position: "relative",
             }}
           >
-            Select a project, or create one to start a board.
+
+            <svg width="80px" height="80px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 21H20C21.1046 21 22 20.1046 22 19V8C22 6.89543 21.1046 6 20 6H11L9.29687 3.4453C9.1114 3.1671 8.79917 3 8.46482 3H4C2.89543 3 2 3.89543 2 5V19C2 20.1046 2.89543 21 4 21Z" stroke="var(--ink-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+
+            <div className="note-empty-state" style={{ fontSize: 14, color: "var(--ink-soft)", animation: "fade-in 0.35s ease" }}>
+              Select a project, or create one to start a board.
+            </div>
+
+            <div className="note-empty-state" style={{ display: "flex", flexDirection: "column", gap: 10, animation: "fade-in 0.45s ease 0.1s both" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  fontSize: 13,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                <kbd style={kbdStyle}>⌘K</kbd>
+                <span>Search across all projects</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  fontSize: 13,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                <kbd style={kbdStyle}>+</kbd>
+                <span>Create a new project board</span>
+              </div>
+            </div>
           </div>
         ) : (
           <>

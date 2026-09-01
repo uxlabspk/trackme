@@ -223,6 +223,7 @@ export default function GraphView({ vaultPath }: Props) {
           justifyContent: "center",
           gap: 20,
           color: "var(--ink-soft)",
+          height: "100%"
         }}
       >
         <div
