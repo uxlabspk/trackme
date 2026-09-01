@@ -85,6 +85,7 @@ Visual diagramming with shapes, edges, arrows, and 8 color palettes. Drag, resiz
 ## Screenshot
 
 ![Preview of Track ME](/images/preview_1.png)
+![Preview of Track ME](/images/preview_2.png)
 
 ---
 
