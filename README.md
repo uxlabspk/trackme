@@ -38,24 +38,30 @@ TrackMe is different. Every note, every meeting, every todo is a **`.md` file** 
 <td width="50%" valign="top">
 
 ### Notes
+
 WYSIWYG markdown editor powered by **Milkdown**. YAML frontmatter for metadata. Fenced code blocks with syntax highlighting. Folder hierarchy. Everything saves automatically — no Ctrl+S needed.
 
 ### Meetings
+
 Recurring meeting series with a full **RRULE-like recurrence engine** (daily, weekly, monthly). See computed occurrences for the next 90 days. Native OS notifications 10 minutes before.
 
 ### Todos
+
 Checkboxes that sync bidirectionally with markdown. Toggle `[x]` in the app, the `.md` file updates. Edit the file directly, the app reflects it. No conflict.
 
 </td>
 <td width="50%" valign="top">
 
 ### Projects
+
 Kanban boards with drag-and-drop. Columns for Backlog, To Do, In Progress, Done. Add, rename, delete — all stored as markdown with YAML frontmatter.
 
 ### Graph View
+
 See how your notes connect. Parses `[[wikilinks]]` and renders an interactive **force-directed graph**. Zoom, pan, discover connections you forgot about.
 
 ### Canvas
+
 Visual diagramming with shapes, edges, arrows, and 8 color palettes. Drag, resize, pan, zoom. Organize into folders. Great for mind maps and architecture diagrams.
 
 </td>
@@ -78,8 +84,7 @@ Visual diagramming with shapes, edges, arrows, and 8 color palettes. Drag, resiz
 
 ## Screenshot
 
-![Preview of Track ME](/images/preview.png)
-
+![Preview of Track ME](/images/preview_1.png)
 
 ---
 
@@ -136,15 +141,15 @@ No database. No proprietary format. Just files.
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Shell | **Tauri v2** (Rust) — native window, file I/O, system tray, notifications |
-| Frontend | **React 18** + **TypeScript** + **Vite** |
-| Runtime | **Deno** (replaces Node — faster, safer, simpler) |
-| Editor | **Milkdown Crepe** — WYSIWYG markdown |
-| Graph | **react-force-graph-2d** — interactive backlink visualization |
-| AI | Multi-provider streaming SSE + 25+ vault tools + speech-to-text |
-| Fonts | Newsreader (display) · Inter (body) · IBM Plex Mono (code) |
+| Layer    | Tech                                                                      |
+| -------- | ------------------------------------------------------------------------- |
+| Shell    | **Tauri v2** (Rust) — native window, file I/O, system tray, notifications |
+| Frontend | **React 18** + **TypeScript** + **Vite**                                  |
+| Runtime  | **Deno** (replaces Node — faster, safer, simpler)                         |
+| Editor   | **Milkdown Crepe** — WYSIWYG markdown                                     |
+| Graph    | **react-force-graph-2d** — interactive backlink visualization             |
+| AI       | Multi-provider streaming SSE + 25+ vault tools + speech-to-text           |
+| Fonts    | Newsreader (display) · Inter (body) · IBM Plex Mono (code)                |
 
 ---
 
