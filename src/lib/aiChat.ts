@@ -1009,6 +1009,75 @@ function parseSSELine(line: string): Record<string, unknown> | null {
   }
 }
 
+async function handleOpenAIResponseFallback(
+  raw: string,
+  callbacks: StreamCallbacks,
+  config: AiConfig,
+  messages: ChatCompletionMessage[],
+  tools: AiToolDefinition[],
+  vaultPath: string,
+  endpoint: string,
+  headers: Record<string, string>,
+  signal?: AbortSignal,
+): Promise<void> {
+  const text = raw.trim();
+  if (!text) {
+    callbacks.onError(new Error("AI server returned an empty response."));
+    return Promise.resolve();
+  }
+
+  try {
+    const data = JSON.parse(text) as ChatCompletionResponse;
+    const choice = data.choices?.[0];
+    const assistantMsg = choice?.message;
+    const content = assistantMsg?.content ?? "";
+    const toolCalls: AiToolCall[] = [];
+
+    if (assistantMsg?.tool_calls && assistantMsg.tool_calls.length > 0) {
+      let currentMessages: ChatCompletionMessage[] = [...messages, { role: "assistant", content: assistantMsg.content, tool_calls: assistantMsg.tool_calls }];
+
+      for (const tc of assistantMsg.tool_calls) {
+        const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+        const result = await executeTool(tc.function.name, args, vaultPath);
+        toolCalls.push({ id: tc.id, name: tc.function.name, arguments: args, result });
+        currentMessages.push({ role: "tool", tool_call_id: tc.id, content: result });
+      }
+
+      const followUpResp = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ model: config.model, messages: currentMessages, tools: formatToolsForApi(tools), tool_choice: "auto", stream: false }),
+        signal,
+      });
+
+      if (followUpResp.ok) {
+        const followData = JSON.parse(await followUpResp.text()) as ChatCompletionResponse;
+        const followChoice = followData.choices?.[0];
+        const followContent = followChoice?.message?.content ?? "";
+        callbacks.onToken(followContent);
+        callbacks.onDone((content ? `${content}\n\n` : "") + followContent, toolCalls);
+        return;
+      }
+
+      callbacks.onDone(content, toolCalls);
+      return;
+    }
+
+    if (content) callbacks.onToken(content);
+    callbacks.onDone(content, toolCalls);
+    return;
+  } catch {
+    if (text.startsWith("data: ") || text.startsWith("event:")) {
+      // Fall through to the existing stream parser below when the response is still SSE-formatted.
+    } else {
+      callbacks.onError(new Error("AI provider returned an invalid response format."));
+      return;
+    }
+  }
+
+  return Promise.resolve();
+}
+
 function getEndpointStreaming(config: AiConfig): string {
   return getEndpoint(config);
 }
@@ -1055,6 +1124,27 @@ export async function sendChatMessageStream(
     const errText = await resp.text().catch(() => "unknown error");
     callbacks.onError(new Error(`AI request failed (${resp.status}): ${errText}`));
     return;
+  }
+
+  const contentType = (resp.headers.get("content-type") ?? "").toLowerCase();
+  if (!contentType.includes("text/event-stream") && !contentType.includes("application/x-ndjson")) {
+    const raw = await resp.text();
+    if (!raw.trim()) {
+      callbacks.onError(new Error("AI server returned an empty response."));
+      return;
+    }
+
+    const text = raw.trim();
+    if (text.startsWith("{") || text.startsWith("[")) {
+      await handleOpenAIResponseFallback(text, callbacks, config, messages, tools, vaultPath, endpoint, headers, signal);
+      return;
+    }
+
+    if (text) {
+      callbacks.onToken(text);
+      callbacks.onDone(text, []);
+      return;
+    }
   }
 
   const reader = resp.body?.getReader();
