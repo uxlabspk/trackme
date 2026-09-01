@@ -671,7 +671,7 @@ export default function AiChatView({ vaultPath, sidebarSlot }: Props) {
                   justifyContent: "center",
                   transition: "background 0.15s",
                 }}
-              >
+              > 
                 <Square size={14} fill="currentColor" />
               </button>
             ) : (
